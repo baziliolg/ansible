@@ -1,0 +1,42 @@
+;
+; Netatalk 3.x configuration file
+;
+
+[Global]
+; Global server settings
+
+mimic model = RackMac
+; Specifies the icon model that appears on clients. Defaults to off.
+; Note that afpd must support Zeroconf. Examples: RackMac (same as Xserve), 
+; PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro,
+; AppleTV1,1, AirPort.
+
+log file = {{ tm_mountpoint }}/afpd.log
+
+log lever = warn
+
+; [Homes]
+; basedir regex = /xxxx
+
+[torrent]
+path = {{ hdd_mountpoint }}
+
+; [My Time Machine Volume]
+; path = /path/to/backup
+; time machine = yes
+
+[TimeMachine]
+# is this volume a time machine?
+time machine = yes
+
+# directory for time machine data on server
+path = {{ tm_mountpoint }}
+
+# the max size of the data folder (in Kb)
+#vol size limit = 980000
+
+# users with access to time machine
+valid users = bazilio
+
+# The mining for sparsebundle is wasteful.
+spotlight = no

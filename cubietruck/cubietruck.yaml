@@ -1,0 +1,234 @@
+---
+- hosts: cb
+  vars:
+    packages: true
+    time_sync: false
+    hdd_mountpoint: /mnt/torrent
+    tm_mountpoint: /mnt/TimeMachine
+  remote_user: root
+  tasks:
+
+  - name: "install packages"
+    apt:
+      update_cache: no
+      name:
+        - mc
+        - screen
+        - smartmontools
+        - ntpdate
+        - tmux 
+        - git
+        - samba
+        - transmission-daemon
+        - transmission-cli
+      state: installed
+    tags:
+      - packages
+    when: packages
+
+  - name: "Stop ntpd"
+    service: name=ntp state=stopped
+    tags:
+      - time
+    when: time_sync
+
+  - name: "Sync time"
+    shell: date; ntpdate pool.ntp.org; date
+    notify: restart ntp
+    tags:
+      - time
+    when: time_sync
+
+### leds
+  - name: "Set LED triggers and disable wireless in rc.local"
+    blockinfile:
+      path: /etc/rc.local
+      insertbefore: "exit\ 0"
+      block: |
+        echo ide-disk > /sys/class/leds/cubietruck\:green\:usr/trigger
+        echo cpu1 > /sys/class/leds/cubietruck\:orange\:usr/trigger
+        echo cpu0 > /sys/class/leds/cubietruck\:white\:usr/trigger
+        echo mmc0 > /sys/class/leds/cubietruck\:blue\:usr/trigger
+        /usr/sbin/rfkill block 0
+        /usr/sbin/rfkill block 2
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+
+### mounts
+  - name: "Create torrent mount"
+    file: path="{{ hdd_mountpoint }}" state=directory mode=777 owner=root
+  - name: "Symlink {{ hdd_mountpoint }} to /torrent"
+    file: src="{{ hdd_mountpoint }}" dest=/torrent state=link
+  - name: "Create TimeMachine mount"
+    file: path="{{ tm_mountpoint }}" state=directory mode=777 owner=root
+
+  - name: "Mount /torrent"
+    mount:
+      path: "{{ hdd_mountpoint }}"
+      src: UUID=7a089d7e-646a-40bc-97c5-f5ab2f8e2ebb
+      fstype: ext4
+      state: mounted
+      opts: defaults,noatime
+
+  - name: "Mount TimeMachine"
+    mount:
+      path: "{{ tm_mountpoint }}"
+      src: UUID=c46337c1-d3fb-4b0e-a727-42a7cc13e047
+      fstype: ext4
+      state: mounted
+      opts: defaults,user_xattr
+
+### users
+  - name: "Create git user"
+    user:
+      name: git
+      home: "{{ hdd_mountpoint }}/.user_git"
+      comment: "user for git repos"
+  - name: "Create git user .ssh folder"
+    file:
+      path: "{{ hdd_mountpoint }}/.user_git/.ssh"
+      state: directory
+      recurse: yes
+      owner: git
+      group: git
+      mode: 0700
+  - name: "Create git user authorized_keys file"
+    copy:
+      dest: "{{ hdd_mountpoint }}/.user_git/.ssh/authorized_keys"
+      src: ./files/authorized_keys.git_user
+      owner: git
+      group: git
+      mode: 0600
+  - name: "Symlink git user home to /home/git"
+    file: src="{{ hdd_mountpoint }}/.user_git" dest=/home/git state=link
+
+### Resilio Sync
+  - name: "Add Resilio Sync apt key"
+    apt_key:
+      url: https://linux-packages.resilio.com/resilio-sync/key.asc
+      state: present
+    tags:
+      - resilio-sync
+
+  - name: "Add Resilio Sync apt repository"
+    apt_repository:
+      repo: deb [arch=armhf] http://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free
+      update_cache: yes
+    tags:
+      - resilio-sync
+
+  - name: "Install Resilio Sync package"
+    apt:
+      name: resilio-sync
+      state: installed
+    tags:
+      - resilio-sync
+
+  - name: "Render Resilio Sync config"
+    template:
+      dest: /lib/systemd/system/resilio-sync.service
+      src: ./templates/resilio-sync.service.j2
+      owner: root
+      group: root
+      mode: 0644
+    register: rslconfig
+    tags:
+      - resilio-sync
+
+  - name: "Restart Resilio Sync service"
+    systemd:
+      name: resilio-sync.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: rslconfig.changed
+    tags:
+      - resilio-sync
+
+### Samba
+  - name: "Render SMB config"
+    template:
+      dest: /etc/samba/smb.conf
+      src: ./templates/smb.conf.j2
+      backup: yes
+      owner: root
+      group: root
+      mode: 0644
+    register: smbconf
+    tags:
+      - samba
+
+  - name: restart samba
+    systemd:
+      name: smbd.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: smbconf.changed
+    tags:
+      - samba
+
+### Transmission
+  - name: "Render Transmission config"
+    template:
+      dest: /etc/transmission-daemon/settings.json
+      src: ./templates/transmission.settings.json.j2
+      backup: yes
+      owner: debian-transmission
+      group: debian-transmission
+      mode: 0600
+    register: transmission_conf
+    tags:
+      - transmission
+
+  - name: "Restart Transmission service"
+    systemd:
+      name: transmission-daemon.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: transmission_conf.changed
+    tags:
+      - transmission
+
+### Time Machine
+
+# 
+
+  - name: "Install packages for Time Machine support"
+    apt:
+      name:
+        - avahi-daemon
+      state: installed
+    tags:
+      - timemachine
+    
+  - name: "Render Netatalk config"
+    template:
+      dest: /usr/local/etc/afp.conf
+      src: ./templates/afp.conf.j2
+      backup: yes
+      owner: root
+      group: staff
+      mode: 0644
+    register: afp_conf
+    tags:
+      - timemachine
+
+  - name: "Restart Netatalk service"
+    systemd:
+      name: netatalk.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: afp_conf.changed
+    tags:
+      - timemachine
+
+  handlers:
+    - name: restart ntp
+      service: name=ntp state=restarted
