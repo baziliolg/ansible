@@ -171,6 +171,24 @@
       - samba
 
 ### Transmission
+  - name: "Set sysctl config for Transmission"
+    template:
+      dest: /etc/sysctl.d/20-transmission.conf
+      src: ./templates/20-transmission.conf.j2
+      owner: root
+      group: root
+    register: transmission_sysctl
+    tags:
+      - transmission
+
+  - name: "Apply sysctl config for Transmission"
+    command: "/sbin/sysctl -p"
+    when: transmission_sysctl.changed
+    become: true
+    become_user: root
+    tags:
+      - transmission
+
   - name: "Render Transmission config"
     template:
       dest: /etc/transmission-daemon/settings.json
@@ -190,7 +208,7 @@
       enabled: yes
       masked: no
       state: restarted
-    when: transmission_conf.changed
+    when: transmission_conf.changed or transmission_sysctl.changed
     tags:
       - transmission
 
