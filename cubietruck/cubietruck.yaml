@@ -124,7 +124,7 @@
     tags:
       - resilio-sync
 
-  - name: "Render Resilio Sync config"
+  - name: "Render Resilio Sync systemd service file"
     template:
       dest: /lib/systemd/system/resilio-sync.service
       src: ./templates/resilio-sync.service.j2
