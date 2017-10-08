@@ -247,6 +247,47 @@
     tags:
       - timemachine
 
+  - name: "Setup disable HDD led cron"
+    cron:
+      name: "hdd_led_disable"
+      hour: "22"
+      minute: "0"
+      job: "echo none > /sys/class/leds/cubietruck\\:green\\:usr/trigger"
+    tags:
+      - cron
+
+  - name: "Setup enable HDD led cron"
+    cron:
+      name: "hdd_led_enable"
+      hour: "6"
+      minute: "0"
+      job: "echo ide-disk > /sys/class/leds/cubietruck\\:green\\:usr/trigger"
+    tags:
+      - cron
+
+  - name: "Render hdparm config"
+    template:
+      dest: /etc/hdparm.conf
+      src: ./templates/hdparm.conf.j2
+      backup: yes
+      owner: root
+      group: root
+      mode: 0644
+    register: hdparm_conf
+    tags:
+      - hdparm
+
+  - name: "Restart hdparm service"
+    systemd:
+      name: hdparm.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: hdparm_conf.changed
+    tags:
+      - hdparm
+
   handlers:
     - name: restart ntp
       service: name=ntp state=restarted
