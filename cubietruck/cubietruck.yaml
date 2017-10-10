@@ -51,6 +51,7 @@
         echo mmc0 > /sys/class/leds/cubietruck\:blue\:usr/trigger
         /usr/sbin/rfkill block 0
         /usr/sbin/rfkill block 2
+        /sbin/hdparm -B 128 -S 180 /dev/sda
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
 
