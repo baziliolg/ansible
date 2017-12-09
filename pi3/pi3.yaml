@@ -1,0 +1,89 @@
+---
+- hosts: pi3
+  vars:
+    packages: true
+#    time_sync: false
+#    hdd_mountpoint: /mnt/torrent
+#    tm_mountpoint: /mnt/TimeMachine
+  remote_user: pi
+  tasks:
+
+  - name: "install packages"
+    apt:
+      update_cache: no
+      name:
+        - mc
+        - screen
+        - ntpdate
+        - tmux 
+        - git
+      state: installed
+    become: true
+    tags:
+      - packages
+    when: packages
+
+### s alias
+  - name: "Add aliases to /etc/profile"
+    blockinfile:
+      path: /etc/profile
+      insertafter: EOF
+      block: |
+        alias s='sudo su -'
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      backup: yes
+    become: true
+
+
+### users
+  - name: "Create pi user"
+    user:
+      name: pi
+      home: "/home/pi"
+      comment: "Default pi user"
+      group: pi
+      groups:
+      - sudo
+      - adm
+      - dialout
+      - cdrom
+      - audio
+      - video
+      - plugdev
+      - games
+      - users
+      - input
+      - netdev
+      - spi
+      - i2c
+      - gpio
+    become: true
+
+  - name: "Create pi user .ssh folder"
+    file:
+      path: "/home/pi/.ssh"
+      state: directory
+      recurse: yes
+      owner: pi
+      group: pi
+      mode: 0700
+    become: true
+
+  - name: "Create pi user authorized_keys file"
+    copy:
+      dest: "/home/pi/.ssh/authorized_keys"
+      src: ./files/authorized_keys.pi_user
+      owner: pi
+      group: pi
+      mode: 0600
+    become: true
+
+### boot config
+  - name: Place /boot/config.txt
+    copy:
+      dest: "/boot/config.txt"
+      src: ./files/boot/config.txt
+      owner: root
+      group: root
+      mode: 0755
+    become: true
