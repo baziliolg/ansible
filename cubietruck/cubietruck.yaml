@@ -52,6 +52,7 @@
         /usr/sbin/rfkill block 0
         /usr/sbin/rfkill block 2
         /sbin/hdparm -B 128 -S 180 /dev/sda
+        /usr/bin/screen -d -m -S q3 /root/torrent/.q3a/ioq3/build/release-linux-arm/ioq3ded.arm +exec q3server.cfg
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
 
@@ -121,7 +122,7 @@
   - name: "Install Resilio Sync package"
     apt:
       name: resilio-sync
-      state: installed
+      state: latest
     tags:
       - resilio-sync
 
@@ -248,6 +249,7 @@
     tags:
       - timemachine
 
+### HDD settings
   - name: "Setup disable HDD led cron"
     cron:
       name: "hdd_led_disable"
@@ -288,6 +290,28 @@
     when: hdparm_conf.changed
     tags:
       - hdparm
+
+# InfluxDB
+  - name: "Add InfluxDB apt key"
+    apt_key:
+      url: https://repos.influxdata.com/influxdb.key
+      state: present
+    tags:
+      - influxdb
+
+  - name: "Add InfluxDB apt repository"
+    apt_repository:
+      repo: deb [arch=armhf] https://repos.influxdata.com/debian jessie stable
+      update_cache: yes
+    tags:
+      - influxdb
+
+  - name: "Install InfluxDB package"
+    apt:
+      name: influxdb
+      state: installed
+    tags:
+      - influxdb
 
   handlers:
     - name: restart ntp
