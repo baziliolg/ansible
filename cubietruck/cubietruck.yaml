@@ -90,7 +90,7 @@
     file:
       path: "{{ hdd_mountpoint }}/.user_git/.ssh"
       state: directory
-      recurse: yes
+      #recurse: yes
       owner: git
       group: git
       mode: 0700
@@ -214,6 +214,51 @@
     tags:
       - transmission
 
+### Transmission-pron
+  - name: "Transmission-pron config dir"
+    file: path="/etc/transmission-daemon-pron" state=directory mode=777 owner=debian-transmission
+    tags:
+      - transmission_pron
+
+  - name: "Transmission-pron upload dir"
+    file: path="{{ hdd_mountpoint }}/upload-pron" state=directory mode=777 owner=debian-transmission
+    tags:
+      - transmission_pron
+
+  - name: "Render Transmission-pron systemd service file"
+    template:
+      dest: /lib/systemd/system/transmission-daemon-pron.service
+      src: ./templates/transmission-daemon-pron.service.j2
+      owner: root
+      group: root
+      mode: 0644
+    register: transmission_pron_systemd
+    tags:
+      - transmission_pron
+
+  - name: "Render Transmission-pron config"
+    template:
+      dest: /etc/transmission-daemon-pron/settings.json
+      src: ./templates/transmission-pron.settings.json.j2
+      backup: yes
+      owner: debian-transmission
+      group: debian-transmission
+      mode: 0600
+    register: transmission_pron_conf
+    tags:
+      - transmission_pron
+
+  - name: "Restart Transmission-pron service"
+    systemd:
+      name: transmission-daemon-pron.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: transmission_pron_conf.changed or transmission_sysctl.changed or transmission_pron_systemd.changed
+    tags:
+      - transmission_pron
+
 ### Time Machine
 
 # 
@@ -290,28 +335,6 @@
     when: hdparm_conf.changed
     tags:
       - hdparm
-
-# InfluxDB
-  - name: "Add InfluxDB apt key"
-    apt_key:
-      url: https://repos.influxdata.com/influxdb.key
-      state: present
-    tags:
-      - influxdb
-
-  - name: "Add InfluxDB apt repository"
-    apt_repository:
-      repo: deb [arch=armhf] https://repos.influxdata.com/debian jessie stable
-      update_cache: yes
-    tags:
-      - influxdb
-
-  - name: "Install InfluxDB package"
-    apt:
-      name: influxdb
-      state: installed
-    tags:
-      - influxdb
 
   handlers:
     - name: restart ntp
