@@ -21,7 +21,7 @@
         - samba
         - transmission-daemon
         - transmission-cli
-      state: installed
+      state: present
     tags:
       - packages
     when: packages
@@ -241,8 +241,8 @@
       dest: /etc/transmission-daemon-pron/settings.json
       src: ./templates/transmission-pron.settings.json.j2
       backup: yes
-      owner: debian-transmission
-      group: debian-transmission
+      owner: nobody
+      group: nogroup
       mode: 0600
     register: transmission_pron_conf
     tags:

@@ -3,7 +3,7 @@ Description=Transmission BitTorrent Daemon - for porn
 After=network.target
 
 [Service]
-User=debian-transmission
+User=nobody
 Type=notify
 ExecStart=/usr/bin/transmission-daemon -f --log-error --config-dir /etc/transmission-daemon-pron
 ExecReload=/bin/kill -s HUP $MAINPID
