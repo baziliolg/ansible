@@ -149,6 +149,17 @@
       - resilio-sync
 
 ### Samba
+  - name: "Create cartoons folder"
+    file:
+      path: "{{ hdd_mountpoint }}/cartoons"
+      state: directory
+      #recurse: yes
+      owner: nobody
+      group: nogroup
+      mode: 0777
+    tags:
+      - samba
+
   - name: "Render SMB config"
     template:
       dest: /etc/samba/smb.conf
@@ -295,23 +306,23 @@
       - timemachine
 
 ### HDD settings
-  - name: "Setup disable HDD led cron"
-    cron:
-      name: "hdd_led_disable"
-      hour: "22"
-      minute: "0"
-      job: "echo none > /sys/class/leds/cubietruck\\:green\\:usr/trigger"
-    tags:
-      - cron
-
-  - name: "Setup enable HDD led cron"
-    cron:
-      name: "hdd_led_enable"
-      hour: "6"
-      minute: "0"
-      job: "echo ide-disk > /sys/class/leds/cubietruck\\:green\\:usr/trigger"
-    tags:
-      - cron
+#  - name: "Setup disable HDD led cron"
+#    cron:
+#      name: "hdd_led_disable"
+#      hour: "22"
+#      minute: "0"
+#      job: "echo none > /sys/class/leds/cubietruck\\:green\\:usr/trigger"
+#    tags:
+#      - cron
+#
+#  - name: "Setup enable HDD led cron"
+#    cron:
+#      name: "hdd_led_enable"
+#      hour: "6"
+#      minute: "0"
+#      job: "echo ide-disk > /sys/class/leds/cubietruck\\:green\\:usr/trigger"
+#    tags:
+#      - cron
 
   - name: "Render hdparm config"
     template:

@@ -31,7 +31,7 @@ netbios name = Cubietruck
 
 # Windows Internet Name Serving Support Section:
 # WINS Support - Tells the NMBD component of Samba to enable its WINS Server
-#   wins support = no
+   wins support = yes
 
 # WINS Server - Tells the NMBD components of Samba to be a WINS Client
 # Note: Samba can be either a WINS Server, or a WINS Client, but NOT both
@@ -121,6 +121,8 @@ max xmit = 8192
 # This option controls how unsuccessful authentication attempts are mapped
 # to anonymous connections
    map to guest = bad user
+
+security = user
 
 ########## Domains ###########
 
@@ -257,6 +259,14 @@ max xmit = 8192
 [torrent]
     path = {{ hdd_mountpoint }}
     comment = 'Sweet bread'
+    browseable = yes
+    read only = no
+    guest ok = no
+    valid users = bazilio
+
+[cartoons]
+    path = {{ hdd_mountpoint }}/cartoons
+    comment = 'Мультфильмы'
     browseable = yes
     read only = no
     guest ok = yes
