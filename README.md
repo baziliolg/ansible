@@ -2,7 +2,7 @@
 
 ## Ansible playbooks
 
-I got very tired of reconfiguring my Cubieboard3 settings from scratch every time it decided to garble root filesystem of SD card.  
-It was a perfect opportunity to start using this hipster smoothie crap that is Ansible.
+I got very tired of reconfiguring my Cubieboard3 from scratch every time it decided to mangle root filesystem on SD card.  
+It was a perfect opportunity to start using Ansible.
 
 Hopefully I won't check-in any passwords.
