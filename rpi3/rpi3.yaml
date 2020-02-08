@@ -2,8 +2,9 @@
 - hosts: rpi3
   vars:
     packages: true
-    files_mountpoint: /files
-    tm_mountpoint: /timemachine
+    files_mountpoint: "/files"
+    files_blkid: "38e39da5-152c-4650-9f1e-d1f95af00f25"
+    netcam_ip: "10.60.0.17"
   remote_user: bazilio
   become: yes
   tasks:
@@ -22,8 +23,8 @@
         - ntpdate
         - htop
         - iotop
-        - transmission-daemon
-        - transmission-cli
+        - hdparm
+        - motion
       state: latest
 
     tags:
@@ -40,15 +41,24 @@
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
       backup: yes
 
+### sudoers
+  - name: "sudoers NOPASSWD"
+    lineinfile:
+      path: /etc/sudoers
+      state: present
+      regexp: '^%sudo\s'
+      line: '%sudo ALL=(ALL)  NOPASSWD: ALL'
 
 
 ### users
   - name: "Create user"
     user:
       name: bazilio
+      # password created with:
+      # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+      password: $1$Ub9VzL9S$9TF/6iNcJp4j5VixhZksK0
       home: "/home/bazilio"
-      comment: "Hello there"
-      group: bazilio
+      comment: "Maksym Pylypenko"
       groups:
       - sudo
       - adm
@@ -70,7 +80,7 @@
     file:
       path: "/home/bazilio/.ssh"
       state: directory
-      recurse: yes
+      recurse: no
       owner: bazilio
       group: bazilio
       mode: 0700
@@ -94,32 +104,28 @@
       group: root
       mode: 0755
 
+### leds
+  - name: "Disable wireless and configure HDD in rc.local"
+    blockinfile:
+      path: /etc/rc.local
+      insertbefore: "exit\ 0"
+      block: |
+        /usr/sbin/rfkill block 0
+        /usr/sbin/rfkill block 1
+        /sbin/hdparm -B 128 -S 180 /dev/sda
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
 ### mounts
   - name: "Create files mount folder"
     file: path="{{ files_mountpoint }}" state=directory mode=777 owner=nobody group=nogroup
 
-
-  - name: "Create timemachine mount folder"
-    file: path="{{ tm_mountpoint }}" state=directory mode=775 owner=nobody group=nogroup
-
-
   - name: "Mount /files"
     mount:
       path: "{{ files_mountpoint }}"
-      src: UUID=f3aa8b9e-8549-4d28-b75d-600cb206c499
+      src: "UUID={{ files_blkid }}"
       fstype: ext4
       state: mounted
       opts: defaults,noatime
-
-  - name: "Mount /timemachine"
-    mount:
-      path: "{{ tm_mountpoint }}"
-      src: UUID=acf2e14c-dd55-4665-9cd3-61ec1ea99800
-      fstype: ext4
-      state: mounted
-      opts: defaults,user_xattr
-
 
 ### Samba
   - name: "Render SMB config"
@@ -145,78 +151,29 @@
     tags:
       - samba
 
-
-### Time Machine
-  - name: "Install packages for Time Machine support"
-    apt:
-      name:
-        - avahi-daemon
+### motion
+  - name: "/etc/default/motion"
+    lineinfile:
+      path: /etc/default/motion
       state: present
-    tags:
-      - timemachine
-    
-  - name: "Render Netatalk config"
+      regexp: '^start_motion_daemon\=no\s'
+      line: 'start_motion_daemon=yes'
+
+  - name: "Render Motion config"
     template:
-      dest: /usr/local/etc/afp.conf
-      src: ./templates/afp.conf.j2
+      dest: /etc/motion/motion.conf
+      src: ./templates/motion.conf.j2
       backup: yes
       owner: root
-      group: staff
+      group: motion
       mode: 0644
-    register: afp_conf
-    tags:
-      - timemachine
+    register: motionconf
 
-  - name: "Restart Netatalk service"
+  - name: "Restart Motion"
     systemd:
-      name: netatalk.service
+      name: motion.service
       daemon_reload: yes
       enabled: yes
       masked: no
       state: restarted
-    when: afp_conf.changed
-    tags:
-      - timemachine
-
-### Transmission
-  - name: "Set sysctl config for Transmission"
-    template:
-      dest: /etc/sysctl.d/20-transmission.conf
-      src: ./templates/20-transmission.conf.j2
-      owner: root
-      group: root
-    register: transmission_sysctl
-    tags:
-      - transmission
-
-  - name: "Apply sysctl config for Transmission"
-    command: "/sbin/sysctl -p"
-    when: transmission_sysctl.changed
-    tags:
-      - transmission
-
-  - name: "Render Transmission config"
-    template:
-      dest: /etc/transmission-daemon/settings.json
-      src: ./templates/transmission.settings.json.j2
-      backup: yes
-      owner: debian-transmission
-      group: debian-transmission
-      mode: 0600
-    register: transmission_conf
-    tags:
-      - transmission
-
-  - name: "Create torrent upload folder"
-    file: path="{{ files_mountpoint }}/upload" state=directory mode=777 owner=nobody group=nogroup
-
-  - name: "Restart Transmission service"
-    systemd:
-      name: transmission-daemon.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: transmission_conf.changed or transmission_sysctl.changed
-    tags:
-      - transmission
+    when: motionconf.changed
