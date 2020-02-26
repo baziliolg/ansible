@@ -14,6 +14,7 @@
       update_cache: no
       name:
         - mc
+        - vim
         - screen
         - ntpdate
         - tmux 
@@ -25,6 +26,9 @@
         - iotop
         - hdparm
         - motion
+        - prometheus-node-exporter
+        - docker.io
+        - docker-compose
       state: latest
 
     tags:
@@ -75,6 +79,12 @@
       - i2c
       - gpio
 
+  - name: "fix pi password"
+    user:
+      name: pi
+      # password created with:
+      # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+      password: $1$Ub9VzL9S$9TF/6iNcJp4j5VixhZksK0
 
   - name: "Create bazilio user .ssh folder"
     file:
@@ -177,3 +187,14 @@
       masked: no
       state: restarted
     when: motionconf.changed
+
+### prometheus
+  - name: "Render Prometheus config"
+    template:
+      dest: /root/prometheus.yml
+      src: ./templates/prometheus.yml.j2
+      backup: yes
+      owner: root
+      group: root
+      mode: 0644
+    register: prometheusconf

@@ -21,6 +21,7 @@
         - samba
         - transmission-daemon
         - transmission-cli
+        - prometheus-node-exporter
       state: present
     tags:
       - packages
