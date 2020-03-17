@@ -13,6 +13,7 @@
       update_cache: no
       name:
         - mc
+        - vim
         - screen
         - ntpdate
         - tmux
@@ -26,6 +27,7 @@
         - hdparm
         - transmission-daemon
         - transmission-cli
+        - prometheus-node-exporter
         - build-essential
         - libevent-dev
         - libssl-dev
@@ -49,7 +51,11 @@
         - tracker
         - libtracker-sparql-2.0-dev
         - libtracker-miner-2.0-dev
-        - kodi
+        - libsndio7.0
+        - libgl1-mesa-dri
+        - libgl1-mesa-glx
+        - cec-utils
+        - rename
       state: latest
 
     tags:
@@ -99,6 +105,23 @@
       - i2c
       - gpio
 
+  - name: "fix pi password"
+    user:
+      name: pi
+      # password created with:
+      # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+      password: $1$Ub9VzL9S$9TF/6iNcJp4j5VixhZksK0
+
+  - name: "Create backup user"
+    user:
+      name: backup
+      # password created with:
+      # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+      password: $1$SomeSalt$SJGMnn5ln/JMTzZcZBHLv.
+      home: "/home/backup"
+      comment: "Hello there"
+      groups:
+        - users
 
   - name: "Create bazilio user .ssh folder"
     file:
@@ -135,6 +158,7 @@
       block: |
         /usr/sbin/rfkill block 0
         /usr/sbin/rfkill block 1
+        /bin/su - pi -c "/usr/bin/screen -d -m -S kodi /usr/bin/kodi"
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
 ### mounts
