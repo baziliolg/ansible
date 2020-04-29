@@ -287,7 +287,7 @@ picture_type jpeg
 ############################################################
 
 # Use ffmpeg to encode movies in realtime (default: off)
-ffmpeg_output_movies on
+ffmpeg_output_movies off
 
 # Use ffmpeg to make movies with only the pixels moving
 # object (ghost images) (default: off)
@@ -489,11 +489,11 @@ ipv6_enabled off
 stream_port 8081
 
 # Quality of the jpeg (in percent) images produced (default: 50)
-stream_quality 80
+stream_quality 60
 
 # Output frames at 1 fps when no motion is detected and increase to the
 # rate given by stream_maxrate when motion is detected (default: off)
-stream_motion on
+stream_motion off
 
 # Maximum framerate for stream streams (default: 1)
 stream_maxrate 25
