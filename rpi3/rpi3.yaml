@@ -26,6 +26,7 @@
         - iotop
         - hdparm
         - motion
+        - proftpd
         - prometheus-node-exporter
         - docker.io
         - docker-compose
@@ -198,3 +199,33 @@
       group: root
       mode: 0644
     register: prometheusconf
+
+### FTP service setup
+# user upload
+  - name: "Create user upload"
+    user:
+      name: "upload"
+      password: $1$werlkjwe$WfY0pi4BVQfkEoUu/pA0K0 # U...123
+      create_home: no
+      comment: "upload"
+      shell: /usr/sbin/nologin
+      groups:
+        - nogroup
+
+  - name: "Render proftpd.conf"
+    template:
+      dest: "/etc/proftpd/proftpd.conf"
+      src: ./templates/proftpd.conf.j2
+      owner: "root"
+      group: "root"
+      mode: 0644
+    register: ftp_conf
+
+  - name: "Restart proftpd service"
+    systemd:
+      name: proftpd.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: ftp_conf.changed
