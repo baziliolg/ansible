@@ -14,6 +14,8 @@
       name:
         - mc
         - screen
+        - htop
+        - iotop
         - smartmontools
         - ntpdate
         - tmux 
@@ -22,7 +24,10 @@
         - transmission-daemon
         - transmission-cli
         - prometheus-node-exporter
-      state: present
+        - avahi-daemon
+        - netatalk
+        - hdparm
+      state: latest
     tags:
       - packages
     when: packages
@@ -46,13 +51,23 @@
       path: /etc/rc.local
       insertbefore: "exit\ 0"
       block: |
+        # /etc/modules does not work
+        /sbin/modprobe -r brcmfmac brcmutil cfg80211
+        # set led triggers
         echo ide-disk > /sys/class/leds/cubietruck\:green\:usr/trigger
         echo cpu1 > /sys/class/leds/cubietruck\:orange\:usr/trigger
         echo cpu0 > /sys/class/leds/cubietruck\:white\:usr/trigger
         echo mmc0 > /sys/class/leds/cubietruck\:blue\:usr/trigger
-        /sbin/hdparm -B 128 -S 180 /dev/sda
+        # cpufreq
+        echo ondemand > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+        echo 1008000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+        echo 408000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+        echo 25 > /sys/devices/system/cpu/cpufreq/ondemand/up_threshold
+        echo 10 > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
+        echo 1 > /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy
+        #/sbin/hdparm -B 128 -S 180 /dev/sda
         /usr/bin/screen -dm -S q3 /root/torrent/.q3a/ioq3/build/release-linux-arm/ioq3ded.arm +exec q3server.cfg
-        /usr/sbin/rfkill block 0
+        #/usr/sbin/rfkill block 0
         /usr/sbin/rfkill block 2
 
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
@@ -273,20 +288,9 @@
       - transmission_pron
 
 ### Time Machine
-
-# 
-
-  - name: "Install packages for Time Machine support"
-    apt:
-      name:
-        - avahi-daemon
-      state: installed
-    tags:
-      - timemachine
-    
   - name: "Render Netatalk config"
     template:
-      dest: /usr/local/etc/afp.conf
+      dest: /etc/netatalk/afp.conf
       src: ./templates/afp.conf.j2
       backup: yes
       owner: root
@@ -335,17 +339,6 @@
       group: root
       mode: 0644
     register: hdparm_conf
-    tags:
-      - hdparm
-
-  - name: "Restart hdparm service"
-    systemd:
-      name: hdparm.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: hdparm_conf.changed
     tags:
       - hdparm
 
