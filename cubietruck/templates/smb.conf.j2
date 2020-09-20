@@ -44,6 +44,9 @@ netbios name = Cubietruck
    printing = bsd
    printcap name = /dev/null
    disable spoolss = yes
+# This will fix Windows XP share authentication
+   lanman auth=yes
+   ntlm auth=yes
 
 #### Networking ####
 
