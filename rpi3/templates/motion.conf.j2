@@ -303,7 +303,7 @@ ffmpeg_timelapse_mode daily
 
 # Bitrate to be used by the ffmpeg encoder (default: 400000)
 # This option is ignored if ffmpeg_variable_bitrate is not 0 (disabled)
-ffmpeg_bps 1024000
+ffmpeg_bps 3000000
 
 # Enables and defines variable bitrate for the ffmpeg encoder.
 # ffmpeg_bps is ignored if variable bitrate is enabled.
@@ -330,7 +330,7 @@ ffmpeg_variable_bitrate 80
 # mp4 - MPEG-4 Part 14 H264 encoding
 # mkv - Matroska H264 encoding
 # hevc - H.265 / HEVC (High Efficiency Video Coding)
-ffmpeg_video_codec mkv
+ffmpeg_video_codec mp4
 
 # When creating videos, should frames be duplicated in order 
 # to keep up with the requested frames per second
