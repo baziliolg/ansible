@@ -16,6 +16,7 @@
         - screen
         - htop
         - iotop
+        - console-log
         - smartmontools
         - ntpdate
         - tmux 
@@ -342,6 +343,41 @@
     tags:
       - hdparm
 
+  - name: "console-log config"
+    copy:
+      dest: "/etc/console-log.conf"
+      src: ./files/console-log.conf
+      owner: root
+      group: root
+      mode: 0644
+    register: console_log_config
+
+  - name: "Restart console-log service"
+    systemd:
+      name: console-log.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: console_log_config.changed
+
+  - name: "Kernel modules blackist"
+    copy:
+      dest: "/etc/modprobe.d/blacklist.conf"
+      src: ./files/blacklist.conf
+      owner: root
+      group: root
+      mode: 0644
+    register: kernel_module_blacklist
+
+  - name: "Re-generate initramfs"
+    command: "/usr/sbin/update-initramfs -u"
+    become: yes
+    when: kernel_module_blacklist.changed
+
   handlers:
     - name: restart ntp
       service: name=ntp state=restarted
+
+
+      
