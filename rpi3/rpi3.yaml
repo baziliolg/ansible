@@ -30,6 +30,8 @@
         - prometheus-node-exporter
         - docker.io
         - docker-compose
+        - nfs-kernel-server
+        - portmap
       state: latest
 
     tags:
@@ -229,3 +231,22 @@
       masked: no
       state: restarted
     when: ftp_conf.changed
+
+### NFS server
+  - name: "Render /etc/exports"
+    template:
+      dest: "/etc/exports"
+      src: ./templates/exports.j2
+      owner: "root"
+      group: "root"
+      mode: 0644
+    register: nfs_conf
+
+  - name: "Restart NFS service"
+    systemd:
+      name: nfs-kernel-server.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: nfs_conf.changed
