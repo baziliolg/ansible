@@ -1,0 +1,9 @@
+ARGS="--collector.filesystem.ignored-mount-points=\"^/(dev|proc|run|sys|media|var/lib/docker)($|\\/)\" \
+    --collector.diskstats.ignored-devices=\"^(ram|zram|mmcblk|loop|fd|(h|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d(p\\d)?$\" \
+    --no-collector.systemd \
+    --no-collector.entropy \
+    --no-collector.vmstat \
+    --no-collector.xfs \
+    --no-collector.filefd \
+    --no-collector.conntrack \
+    --no-collector.sockstat"
