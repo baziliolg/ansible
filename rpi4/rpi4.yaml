@@ -220,29 +220,29 @@
       state: present
     tags:
       - timemachine
-    
-  - name: "Render Netatalk config"
-    template:
-      dest: /usr/local/etc/afp.conf
-      src: ./templates/afp.conf.j2
-      backup: yes
-      owner: root
-      group: staff
-      mode: 0644
-    register: afp_conf
-    tags:
-      - timemachine
 
-  - name: "Restart Netatalk service"
-    systemd:
-      name: netatalk.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: afp_conf.changed
-    tags:
-      - timemachine
+#  - name: "Render Netatalk config"
+#    template:
+#      dest: /usr/local/etc/afp.conf
+#      src: ./templates/afp.conf.j2
+#      backup: yes
+#      owner: root
+#      group: staff
+#      mode: 0644
+#    register: afp_conf
+#    tags:
+#      - timemachine
+#
+#  - name: "Restart Netatalk service"
+#    systemd:
+#      name: netatalk.service
+#      daemon_reload: yes
+#      enabled: yes
+#      masked: no
+#      state: restarted
+#    when: afp_conf.changed
+#    tags:
+#      - timemachine
 
 ### Transmission
   - name: "Set sysctl config for Transmission"
@@ -286,3 +286,22 @@
     when: transmission_conf.changed or transmission_sysctl.changed
     tags:
       - transmission
+
+### prometheus-node-exporter
+  - name: "prometheus-node-exporter default settings"
+    copy:
+      dest: "/etc/default/prometheus-node-exporter"
+      src: ./files/prometheus-node-exporter
+      owner: root
+      group: root
+      mode: 0644
+    register: prometheus_node_exporter_config
+
+  - name: "Restart prometheus-node-exporter service"
+    systemd:
+      name: prometheus-node-exporter.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: prometheus_node_exporter_config.changed

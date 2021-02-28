@@ -250,3 +250,22 @@
       masked: no
       state: restarted
     when: nfs_conf.changed
+
+### prometheus-node-exporter
+  - name: "prometheus-node-exporter default settings"
+    copy:
+      dest: "/etc/default/prometheus-node-exporter"
+      src: ./files/prometheus-node-exporter
+      owner: root
+      group: root
+      mode: 0644
+    register: prometheus_node_exporter_config
+
+  - name: "Restart prometheus-node-exporter service"
+    systemd:
+      name: prometheus-node-exporter.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: prometheus_node_exporter_config.changed
