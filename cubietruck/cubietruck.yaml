@@ -5,6 +5,7 @@
     time_sync: false
     hdd_mountpoint: /mnt/torrent
     tm_mountpoint: /mnt/TimeMachine
+    tm500_mountpoint: /mnt/500GB
   remote_user: root
   tasks:
 
@@ -87,6 +88,8 @@
     file: src="{{ hdd_mountpoint }}" dest=/torrent state=link
   - name: "Create TimeMachine mount"
     file: path="{{ tm_mountpoint }}" state=directory mode=777 owner=root
+  - name: "Create TimeMachine500 mount"
+    file: path="{{ tm500_mountpoint }}" state=directory mode=777 owner=root
 
   - name: "Mount /torrent"
     mount:
@@ -100,6 +103,14 @@
     mount:
       path: "{{ tm_mountpoint }}"
       src: UUID=c46337c1-d3fb-4b0e-a727-42a7cc13e047
+      fstype: ext4
+      state: mounted
+      opts: defaults,user_xattr
+
+  - name: "Mount TimeMachine500"
+    mount:
+      path: "{{ tm500_mountpoint }}"
+      src: UUID=976c1879-4191-4422-aab7-c87d628144de
       fstype: ext4
       state: mounted
       opts: defaults,user_xattr
