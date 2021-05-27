@@ -11,7 +11,7 @@ mimic model = RackMac
 ; PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro,
 ; AppleTV1,1, AirPort.
 
-log file = {{ tm_mountpoint }}/afpd.log
+log file = {{ hdd_mountpoint }}/.log/afpd.log
 
 log lever = warn
 
@@ -22,25 +22,7 @@ log lever = warn
 path = {{ hdd_mountpoint }}
 time machine = no
 
-; [My Time Machine Volume]
-; path = /path/to/backup
-; time machine = yes
-
-[TimeMachine]
-# is this volume a time machine?
-time machine = yes
-
-# directory for time machine data on server
-path = {{ tm_mountpoint }}
-
-# the max size of the data folder (in Kb)
-#vol size limit = 980000
-
-# users with access to time machine
-valid users = bazilio
-
-# The mining for sparsebundle is wasteful.
-spotlight = no
+#######################################
 
 [TimeMachine500]
 # is this volume a time machine?

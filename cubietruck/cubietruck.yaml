@@ -86,8 +86,6 @@
     file: path="{{ hdd_mountpoint }}" state=directory mode=777 owner=root
   - name: "Symlink {{ hdd_mountpoint }} to /torrent"
     file: src="{{ hdd_mountpoint }}" dest=/torrent state=link
-  - name: "Create TimeMachine mount"
-    file: path="{{ tm_mountpoint }}" state=directory mode=777 owner=root
   - name: "Create TimeMachine500 mount"
     file: path="{{ tm500_mountpoint }}" state=directory mode=777 owner=root
 
@@ -104,7 +102,7 @@
       path: "{{ tm_mountpoint }}"
       src: UUID=c46337c1-d3fb-4b0e-a727-42a7cc13e047
       fstype: ext4
-      state: mounted
+      state: absent
       opts: defaults,user_xattr
 
   - name: "Mount TimeMachine500"
