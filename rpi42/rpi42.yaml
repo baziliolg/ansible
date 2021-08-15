@@ -12,42 +12,45 @@
     apt:
       update_cache: yes
       name:
-        - sudo
-        - mc
-        - vim
-        - screen
-        - locales
-        - ntpdate
-        - tmux
+        - adwaita-icon-theme
         - aptitude
-        - git
-        - samba
-        - smartmontools
-        - ntpdate
+        - avahi-daemon
+        - docker-compose
+        - docker.io
+        - ethtool
         - fake-hwclock
-        - ntp
+        - git
+        - hdparm
         - htop
         - iotop
-        - ethtool
-        - hdparm
-        - usbutils
-        - wget
-        - rfkill
+        - libasound2
+        - libatspi2.0-0
+        - libgbm1
+        - libgl1-mesa-dri
+        - libgl1-mesa-glx
+        - libglib2.0-bin
         - libgtk-3-0
         - libnotify4
         - libxtst6
-        - xdg-utils
-        - libatspi2.0-0
-        - libgbm1
-        - libglib2.0-bin
-        - adwaita-icon-theme
-        - libasound2
+        - locales
+        - mc
+        - motion
+        - ntp
+        - ntpdate
+        - portmap
         - prometheus-node-exporter
-        - avahi-daemon
-        - libgl1-mesa-dri
-        - libgl1-mesa-glx
-        - rsync
         - rename
+        - rfkill
+        - rsync
+        - samba
+        - screen
+        - smartmontools
+        - sudo
+        - tmux
+        - usbutils
+        - vim
+        - wget
+        - xdg-utils
       state: latest
 
     tags:
