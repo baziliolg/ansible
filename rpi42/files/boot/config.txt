@@ -41,6 +41,9 @@ hdmi_drive=2
 # uncomment for composite PAL
 #sdtv_mode=2
 
+# uncomment to enable 4k60 display mode
+#hdmi_enable_4kp60=1
+
 #uncomment to overclock the arm. 700 MHz is the default.
 #arm_freq=800
 
@@ -58,12 +61,12 @@ hdmi_drive=2
 # Enable audio (loads snd_bcm2835)
 #dtparam=audio=on
 
-[pi4]
-# Enable DRM VC4 V3D driver on top of the dispmanx display stack
-dtoverlay=vc4-fkms-v3d,cma-265
-max_framebuffers=2
+# Enable DRM VC4 V3D drive
+#dtoverlay=vc4-kms-v3d
+#max_framebuffers=2
+
+arm_64bit=1
 
 [all]
-#dtoverlay=vc4-fkms-v3d
 dtoverlay=disable-wifi
 dtoverlay=disable-bt

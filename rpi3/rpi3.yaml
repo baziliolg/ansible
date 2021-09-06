@@ -2,8 +2,8 @@
 - hosts: rpi3
   vars:
     packages: true
-    files_mountpoint: "/files"
-    files_blkid: "38e39da5-152c-4650-9f1e-d1f95af00f25"
+#    files_mountpoint: "/files"
+#    files_blkid: "38e39da5-152c-4650-9f1e-d1f95af00f25"
     netcam_ip: "10.60.0.17"
   remote_user: bazilio
   become: yes
@@ -25,7 +25,7 @@
         - htop
         - iotop
         - hdparm
-        - motion
+#        - motion
         - proftpd
         - prometheus-node-exporter
         - docker.io
@@ -129,67 +129,67 @@
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
 ### mounts
-  - name: "Create files mount folder"
-    file: path="{{ files_mountpoint }}" state=directory mode=777 owner=nobody group=nogroup
-
-  - name: "Mount /files"
-    mount:
-      path: "{{ files_mountpoint }}"
-      src: "UUID={{ files_blkid }}"
-      fstype: ext4
-      state: mounted
-      opts: defaults,noatime
+#  - name: "Create files mount folder"
+#    file: path="{{ files_mountpoint }}" state=directory mode=777 owner=nobody group=nogroup
+#
+#  - name: "Mount /files"
+#    mount:
+#      path: "{{ files_mountpoint }}"
+#      src: "UUID={{ files_blkid }}"
+#      fstype: ext4
+#      state: mounted
+#      opts: defaults,noatime
 
 ### Samba
-  - name: "Render SMB config"
-    template:
-      dest: /etc/samba/smb.conf
-      src: ./templates/smb.conf.j2
-      backup: yes
-      owner: root
-      group: root
-      mode: 0644
-    register: smbconf
-    tags:
-      - samba
-
-  - name: restart samba
-    systemd:
-      name: smbd.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: smbconf.changed
-    tags:
-      - samba
+#  - name: "Render SMB config"
+#    template:
+#      dest: /etc/samba/smb.conf
+#      src: ./templates/smb.conf.j2
+#      backup: yes
+#      owner: root
+#      group: root
+#      mode: 0644
+#    register: smbconf
+#    tags:
+#      - samba
+#
+#  - name: restart samba
+#    systemd:
+#      name: smbd.service
+#      daemon_reload: yes
+#      enabled: yes
+#      masked: no
+#      state: restarted
+#    when: smbconf.changed
+#    tags:
+#      - samba
 
 ### motion
-  - name: "/etc/default/motion"
-    lineinfile:
-      path: /etc/default/motion
-      state: present
-      regexp: '^start_motion_daemon\=no\s'
-      line: 'start_motion_daemon=yes'
-
-  - name: "Render Motion config"
-    template:
-      dest: /etc/motion/motion.conf
-      src: ./templates/motion.conf.j2
-      backup: yes
-      owner: root
-      group: motion
-      mode: 0644
-    register: motionconf
-
-  - name: "Restart Motion"
-    systemd:
-      name: motion.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: motionconf.changed
+#  - name: "/etc/default/motion"
+#    lineinfile:
+#      path: /etc/default/motion
+#      state: present
+#      regexp: '^start_motion_daemon\=no\s'
+#      line: 'start_motion_daemon=yes'
+#
+#  - name: "Render Motion config"
+#    template:
+#      dest: /etc/motion/motion.conf
+#      src: ./templates/motion.conf.j2
+#      backup: yes
+#      owner: root
+#      group: motion
+#      mode: 0644
+#    register: motionconf
+#
+#  - name: "Restart Motion"
+#    systemd:
+#      name: motion.service
+#      daemon_reload: yes
+#      enabled: yes
+#      masked: no
+#      state: restarted
+#    when: motionconf.changed
 
 ### prometheus
   - name: "Render Prometheus config"
@@ -204,53 +204,53 @@
 
 ### FTP service setup
 # user upload
-  - name: "Create user upload"
-    user:
-      name: "upload"
-      password: $1$werlkjwe$WfY0pi4BVQfkEoUu/pA0K0 # U...123
-      create_home: no
-      comment: "upload"
-      shell: /usr/sbin/nologin
-      groups:
-        - nogroup
-
-  - name: "Render proftpd.conf"
-    template:
-      dest: "/etc/proftpd/proftpd.conf"
-      src: ./templates/proftpd.conf.j2
-      owner: "root"
-      group: "root"
-      mode: 0644
-    register: ftp_conf
-
-  - name: "Restart proftpd service"
-    systemd:
-      name: proftpd.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: ftp_conf.changed
-
-### NFS server
-  - name: "Render /etc/exports"
-    template:
-      dest: "/etc/exports"
-      src: ./templates/exports.j2
-      owner: "root"
-      group: "root"
-      mode: 0644
-    register: nfs_conf
-
-  - name: "Restart NFS service"
-    systemd:
-      name: nfs-kernel-server.service
-      daemon_reload: yes
-      enabled: yes
-      masked: no
-      state: restarted
-    when: nfs_conf.changed
-
+#  - name: "Create user upload"
+#    user:
+#      name: "upload"
+#      password: $1$werlkjwe$WfY0pi4BVQfkEoUu/pA0K0 # U...123
+#      create_home: no
+#      comment: "upload"
+#      shell: /usr/sbin/nologin
+#      groups:
+#        - nogroup
+#
+#  - name: "Render proftpd.conf"
+#    template:
+#      dest: "/etc/proftpd/proftpd.conf"
+#      src: ./templates/proftpd.conf.j2
+#      owner: "root"
+#      group: "root"
+#      mode: 0644
+#    register: ftp_conf
+#
+#  - name: "Restart proftpd service"
+#    systemd:
+#      name: proftpd.service
+#      daemon_reload: yes
+#      enabled: yes
+#      masked: no
+#      state: restarted
+#    when: ftp_conf.changed
+#
+#### NFS server
+#  - name: "Render /etc/exports"
+#    template:
+#      dest: "/etc/exports"
+#      src: ./templates/exports.j2
+#      owner: "root"
+#      group: "root"
+#      mode: 0644
+#    register: nfs_conf
+#
+#  - name: "Restart NFS service"
+#    systemd:
+#      name: nfs-kernel-server.service
+#      daemon_reload: yes
+#      enabled: yes
+#      masked: no
+#      state: restarted
+#    when: nfs_conf.changed
+#
 ### prometheus-node-exporter
   - name: "prometheus-node-exporter default settings"
     copy:

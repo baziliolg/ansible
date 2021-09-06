@@ -1,18 +1,34 @@
 ---
 - hosts: rpi42
   vars:
-    packages: true
+    remove_packages: false
+    packages: false
+    camera_mountpoint: /camera
     files_mountpoint: /files
-    tm_mountpoint: /timemachine
-  remote_user: bazilio
+    files_blkid: "e1814c17-048a-4d29-8515-a60b76f992bf"
+    camera_blkid: "38e39da5-152c-4650-9f1e-d1f95af00f25"
+    netcam_ip: "10.60.0.17"
+  remote_user: pi
   become: yes
   tasks:
 
+### Delete packages from X11 installation of Raspbian
+  - name: "delete packages"
+    apt:
+      update_cache: no
+      name:
+        - xserver-xorg
+        - lxde
+        - plymouth
+      state: absent
+      autoremove: yes
+      purge: yes
+    when: remove_packages
+
   - name: "install packages"
     apt:
-      update_cache: yes
+      update_cache: no
       name:
-        - adwaita-icon-theme
         - aptitude
         - avahi-daemon
         - docker-compose
@@ -23,21 +39,15 @@
         - hdparm
         - htop
         - iotop
-        - libasound2
-        - libatspi2.0-0
-        - libgbm1
-        - libgl1-mesa-dri
-        - libgl1-mesa-glx
-        - libglib2.0-bin
-        - libgtk-3-0
-        - libnotify4
-        - libxtst6
         - locales
         - mc
         - motion
+        - netatalk
+        - nfs-kernel-server
         - ntp
         - ntpdate
         - portmap
+        - proftpd
         - prometheus-node-exporter
         - rename
         - rfkill
@@ -46,16 +56,14 @@
         - screen
         - smartmontools
         - sudo
-        - tmux
         - usbutils
         - vim
         - wget
-        - xdg-utils
-      state: latest
-
+      state: present
+    when: packages
     tags:
       - packages
-    when: packages
+
 
 ### s alias
   - name: "Add aliases to /etc/profile"
@@ -129,13 +137,27 @@
   - name: "Create files mount folder"
     file: path="{{ files_mountpoint }}" state=directory mode=777 owner=nobody group=nogroup
 
+  - name: "Create camera mount folder"
+    file: path="{{ camera_mountpoint }}" state=directory mode=777 owner=nobody group=nogroup
+
+
   - name: "Mount /files"
     mount:
       path: "{{ files_mountpoint }}"
-      src: UUID=e1814c17-048a-4d29-8515-a60b76f992bf
+      src: UUID={{ files_blkid }}
       fstype: ext4
       state: mounted
       opts: defaults,noatime
+
+  - name: "Mount /camera"
+    mount:
+      path: "{{ camera_mountpoint }}"
+      src: UUID={{ camera_blkid }}
+      fstype: ext4
+      state: mounted
+      opts: defaults,noatime
+
+
 
 ### Samba
   - name: "Render SMB config"
@@ -161,6 +183,26 @@
     tags:
       - samba
 
+### AFP
+  - name: "Render Netatalk config"
+    template:
+      dest: /etc/netatalk/afp.conf
+      src: ./templates/afp.conf.j2
+      backup: yes
+      owner: root
+      group: staff
+      mode: 0644
+    register: afp_conf
+
+  - name: "Restart Netatalk service"
+    systemd:
+      name: netatalk.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: afp_conf.changed
+
 ### prometheus-node-exporter
   - name: "prometheus-node-exporter default settings"
     copy:
@@ -180,28 +222,107 @@
       state: restarted
     when: prometheus_node_exporter_config.changed
 
-  - name: "Place start-chia.sh helper"
-    copy:
-      dest: /usr/local/bin/start-chia.sh
-      src: ./files/start-chia.sh
-      owner: bazilio
-      group: bazilio
-      mode: 0755
-
-  - name: "Place start-chia systemd service file"
-    copy:
-      dest: /lib/systemd/system/start-chia.service
-      src: ./files/start-chia.service
+### prometheus server
+### (config for Docker container)
+  - name: "Render Prometheus config"
+    template:
+      dest: /root/prometheus.yml
+      src: ./templates/prometheus.yml.j2
+      backup: yes
       owner: root
       group: root
       mode: 0644
-    register: chiaservice
+    register: prometheusconf
 
-  - name: "Restart start-chia service"
+  - name: "Render Grafana config"
+    template:
+      dest: /root/grafana.ini
+      src: ./templates/grafana.ini.j2
+      backup: yes
+      owner: root
+      group: root
+      mode: 0644
+    register: grafanaconf
+
+### FTP service setup
+# user upload
+  - name: "Create user upload"
+    user:
+      name: "upload"
+      password: $1$werlkjwe$WfY0pi4BVQfkEoUu/pA0K0 # U...123
+      create_home: no
+      comment: "upload"
+      shell: /usr/sbin/nologin
+      groups:
+        - nogroup
+
+  - name: "Render proftpd.conf"
+    template:
+      dest: "/etc/proftpd/proftpd.conf"
+      src: ./templates/proftpd.conf.j2
+      owner: "root"
+      group: "root"
+      mode: 0644
+    register: ftp_conf
+
+  - name: "Restart proftpd service"
     systemd:
-      name: start-chia.service
+      name: proftpd.service
       daemon_reload: yes
       enabled: yes
       masked: no
       state: restarted
-    when: chiaservice.changed
+    when: ftp_conf.changed
+
+### NFS server
+  - name: "Render /etc/exports"
+    template:
+      dest: "/etc/exports"
+      src: ./templates/exports.j2
+      owner: "root"
+      group: "root"
+      mode: 0644
+    register: nfs_conf
+
+  - name: "Restart NFS service"
+    systemd:
+      name: nfs-kernel-server.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: nfs_conf.changed
+
+## motion
+  - name: "/etc/default/motion"
+    lineinfile:
+      path: /etc/default/motion
+      state: present
+      regexp: '^start_motion_daemon\=no\s'
+      line: 'start_motion_daemon=yes'
+
+  - name: "Render Motion config"
+    template:
+      dest: /etc/motion/motion.conf
+      src: ./templates/motion.conf.j2
+      backup: yes
+      owner: root
+      group: motion
+      mode: 0644
+    register: motionconf
+
+  - name: "Restart Motion"
+    systemd:
+      name: motion.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: motionconf.changed
+
+  - name: Empty motion files cron
+    ansible.builtin.cron:
+      name: "Remove empty motion files"
+      minute: "0"
+      hour: "0"
+      job: "find {{ camera_mountpoint }} -type f -name *.mp4 -size 0c -delete; find {{ camera_mountpoint }} -maxdepth 3 -type d -empty ! -iname 'lost+found' -delete"
