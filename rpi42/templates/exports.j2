@@ -8,5 +8,5 @@
 # /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)
 # /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
 #
-{{ files_mountpoint }}	10.60.0.0/24(rw,anongid=117,anonuid=110,all_squash,no_subtree_check)
-{{ camera_mountpoint }}	10.60.0.0/24(rw,anongid=117,anonuid=110,all_squash,no_subtree_check)
+{{ files_mountpoint }}	10.60.0.0/24(rw,anongid=65534,anonuid=65534,all_squash,no_subtree_check)
+{{ camera_mountpoint }}	10.60.0.0/24(ro,anongid=65534,anonuid=65534,all_squash,no_subtree_check)

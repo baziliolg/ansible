@@ -2,7 +2,7 @@
 - hosts: rpi42
   vars:
     remove_packages: false
-    packages: false
+    packages: true
     camera_mountpoint: /camera
     files_mountpoint: /files
     files_blkid: "e1814c17-048a-4d29-8515-a60b76f992bf"
@@ -55,6 +55,8 @@
         - samba
         - screen
         - smartmontools
+        - transmission-daemon
+        - transmission-cli
         - sudo
         - usbutils
         - vim
@@ -105,6 +107,7 @@
       - users
       - input
       - netdev
+      - nogroup
 
   - name: "Create bazilio user .ssh folder"
     file:
@@ -326,3 +329,45 @@
       minute: "0"
       hour: "0"
       job: "find {{ camera_mountpoint }} -type f -name *.mp4 -size 0c -delete; find {{ camera_mountpoint }} -maxdepth 3 -type d -empty ! -iname 'lost+found' -delete"
+
+### Transmission
+  - name: "Set sysctl config for Transmission"
+    template:
+      dest: /etc/sysctl.d/20-transmission.conf
+      src: ./templates/20-transmission.conf.j2
+      owner: root
+      group: root
+    register: transmission_sysctl
+    tags:
+      - transmission
+
+  - name: "Apply sysctl config for Transmission"
+    command: "/sbin/sysctl -p"
+    when: transmission_sysctl.changed
+    become: true
+    become_user: root
+    tags:
+      - transmission
+
+  - name: "Render Transmission config"
+    template:
+      dest: /etc/transmission-daemon/settings.json
+      src: ./templates/transmission.settings.json.j2
+      backup: yes
+      owner: debian-transmission
+      group: debian-transmission
+      mode: 0600
+    register: transmission_conf
+    tags:
+      - transmission
+
+  - name: "Restart Transmission service"
+    systemd:
+      name: transmission-daemon.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: transmission_conf.changed or transmission_sysctl.changed
+    tags:
+      - transmission
