@@ -75,8 +75,8 @@
         echo 10 > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
         echo 1 > /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy
         #/sbin/hdparm -B 128 -S 180 /dev/sda
-        # Quake3 server
-        /usr/bin/sudo -u root /bin/bash -lc "/usr/bin/screen -dm -S q3 /root/torrent/.q3a/ioq3/build/release-linux-arm/ioq3ded.arm +exec q3server.cfg 2>&1 > /root/torrent/.q3a/screen.log"
+        # Quake3 server (disabled)
+        #/usr/bin/sudo -u root /bin/bash -lc "/usr/bin/screen -dm -S q3 /root/torrent/.q3a/ioq3/build/release-linux-arm/ioq3ded.arm +exec q3server.cfg 2>&1 > /root/torrent/.q3a/screen.log"
 
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 

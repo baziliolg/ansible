@@ -273,3 +273,17 @@ security = user
     browseable = yes
     read only = no
     guest ok = yes
+
+[Movies]
+    path = {{ hdd_mountpoint }}/Movies
+    comment = 'Фільми'
+    browseable = yes
+    read only = yes
+    guest ok = yes
+
+[TV Shows]
+    path = "{{ hdd_mountpoint }}/TV Shows"
+    comment = 'Серіали'
+    browseable = yes
+    read only = yes
+    guest ok = yes
