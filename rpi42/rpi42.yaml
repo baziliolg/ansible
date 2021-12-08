@@ -330,6 +330,14 @@
       hour: "0"
       job: "find {{ camera_mountpoint }} -type f -name *.mp4 -size 0c -delete; find {{ camera_mountpoint }} -maxdepth 3 -type d -empty ! -iname 'lost+found' -delete"
 
+  - name: Clean old camera recordings
+    ansible.builtin.cron:
+      name: "Clean old camera recordings"
+      minute: "0"
+      hour: "1"
+      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +50 -delete -print"
+
+
 ### Transmission
   - name: "Set sysctl config for Transmission"
     template:
