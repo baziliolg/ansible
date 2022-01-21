@@ -2,7 +2,7 @@
 - hosts: rpi42
   vars:
     remove_packages: false
-    packages: true
+    packages: false
     camera_mountpoint: /camera
     files_mountpoint: /files
     files_blkid: "e1814c17-048a-4d29-8515-a60b76f992bf"
@@ -335,7 +335,7 @@
       name: "Clean old camera recordings"
       minute: "0"
       hour: "1"
-      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +50 -delete -print"
+      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +35 -delete -print"
 
 
 ### Transmission

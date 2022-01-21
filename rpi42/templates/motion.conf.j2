@@ -6,7 +6,7 @@
 daemon off
 
 # File to store the process ID, also called pid file. (default: not defined)
-process_id_file /var/run/motion/motion.pid
+pid_file /var/run/motion/motion.pid
 
 ############################################################
 # Basic Setup Mode
@@ -31,7 +31,7 @@ log_type all
 
 # Videodevice to be used for capturing  (default /dev/video0)
 # for FreeBSD default is /dev/bktr0
-videodevice /dev/video0
+video_device /dev/video0
 
 # v4l2_palette allows one to choose preferable palette to be use by motion
 # to capture from those supported by your videodevice. (default: 17)
@@ -92,10 +92,10 @@ power_line_frequency -1
 rotate 0
 
 # Image width (pixels). Valid range: Camera dependent, default: 352
-width 1280
+width 1920
 
 # Image height (pixels). Valid range: Camera dependent, default: 288
-height 720
+height 1080
 
 # Maximum number of frames to be captured per second.
 # Valid range: 2-100. Default: 100 (almost no limit).
@@ -112,7 +112,6 @@ minimum_frame_time 0
 netcam_url rtsp://{{ netcam_ip }}:554/2
 netcam_highres rtsp://{{ netcam_ip }}:554/1
 movie_passthrough on
-ffmpeg_passthrougn on
 
 # Username and password for network camera (only if required). Default: not defined
 # Syntax is user:password
@@ -257,6 +256,7 @@ max_movie_time 300
 # Always save images even if there was no motion (default: off)
 emulate_motion off
 
+pause on
 
 ############################################################
 # Image File Output
@@ -268,13 +268,13 @@ emulate_motion off
 # Picture with most motion of an event is saved when set to 'best'.
 # Picture with motion nearest center of picture is saved when set to 'center'.
 # Can be used as preview shot for the corresponding movie.
-output_pictures off
+picture_output off
 
 # Output pictures with only the pixels moving object (ghost images) (default: off)
-output_debug_pictures off
+picture_output_motion off
 
 # The quality (in percent) to be used by the jpeg compression (default: 75)
-quality 80
+picture_quality 80
 
 # Type of output images
 # Valid values: jpeg, ppm (default: jpeg)
@@ -288,30 +288,30 @@ picture_type jpeg
 ############################################################
 
 # Use ffmpeg to encode movies in realtime (default: off)
-ffmpeg_output_movies off
+movie_output off
 
 # Use ffmpeg to make movies with only the pixels moving
 # object (ghost images) (default: off)
-ffmpeg_output_debug_movies off
+movie_output_motion off
 
 # Use ffmpeg to encode a timelapse movie
 # Default value 0 = off - else save frame every Nth second
-ffmpeg_timelapse 30
+timelapse_interval 30
 
 timelapse_fps 25
 # The file rollover mode of the timelapse video
 # Valid values: hourly, daily (default), weekly-sunday, weekly-monday, monthly, manual
-ffmpeg_timelapse_mode daily
+timelapse_mode daily
 
 # Bitrate to be used by the ffmpeg encoder (default: 400000)
 # This option is ignored if ffmpeg_variable_bitrate is not 0 (disabled)
-ffmpeg_bps 4000000
+movie_bps 4000000
 
 # Enables and defines variable bitrate for the ffmpeg encoder.
 # ffmpeg_bps is ignored if variable bitrate is enabled.
 # Valid values: 0 (default) = fixed bitrate defined by ffmpeg_bps,
 # or the range 1 - 100 where 1 means worst quality and 100 is best.
-ffmpeg_variable_bitrate 0
+movie_quality 0
 
 # Codec to used by ffmpeg for the video compression.
 # Timelapse videos have two options.
@@ -332,12 +332,14 @@ ffmpeg_variable_bitrate 0
 # mp4 - MPEG-4 Part 14 H264 encoding
 # mkv - Matroska H264 encoding
 # hevc - H.265 / HEVC (High Efficiency Video Coding)
-ffmpeg_video_codec mp4
+movie_codec mp4
+
+timelapse_codec mp4
 
 # When creating videos, should frames be duplicated in order 
 # to keep up with the requested frames per second
 # (default: true)
-ffmpeg_duplicate_frames false
+movie_duplicate_frames false
 
 ############################################################
 # SDL Window
@@ -499,7 +501,7 @@ stream_quality 70
 stream_motion off
 
 # Maximum framerate for stream streams (default: 1)
-stream_maxrate 25
+stream_maxrate 5
 
 # Restrict stream connections to localhost only (default: on)
 stream_localhost off
