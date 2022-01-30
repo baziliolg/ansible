@@ -1,0 +1,18 @@
+[Unit]
+Description=Start Camera dump
+
+Wants=network.target
+After=syslog.target network-online.target
+
+[Service]
+User=motion
+Group=motion
+Type=simple
+RemainAfterExit=true
+WorkingDirectory={{ camera_mountpoint }}
+ExecStart=/usr/local/bin/dump_rtsp.sh
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

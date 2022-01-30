@@ -27,7 +27,7 @@
 
   - name: "install packages"
     apt:
-      update_cache: no
+      update_cache: yes
       name:
         - aptitude
         - avahi-daemon
@@ -61,7 +61,7 @@
         - usbutils
         - vim
         - wget
-      state: present
+      state: latest
     when: packages
     tags:
       - packages
@@ -296,7 +296,7 @@
       state: restarted
     when: nfs_conf.changed
 
-## motion
+## motion and camera
   - name: "/etc/default/motion"
     lineinfile:
       path: /etc/default/motion
@@ -336,6 +336,40 @@
       minute: "0"
       hour: "1"
       job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +35 -delete -print"
+
+  - name: "Render dump_rtsp systemd service file"
+    template:
+      dest: /lib/systemd/system/dump_rtsp.service
+      src: ./templates/dump_rtsp.service.j2
+      owner: root
+      group: root
+      mode: 0644
+    register: dump_rtsp_systemd
+    tags:
+      - dump_rtsp
+
+  - name: "Render dump_rtsp script"
+    template:
+      dest: /usr/local/bin/dump_rtsp.sh
+      src: ./templates/dump_rtsp.sh.j2
+      backup: no
+      owner: motion
+      group: motion
+      mode: 0755
+    register: dump_rtsp_script
+    tags:
+      - dump_rtsp
+
+  - name: "Restart dump_rtsp service"
+    systemd:
+      name: dump_rtsp.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: dump_rtsp_script.changed or dump_rtsp_systemd.changed
+    tags:
+      - dump_rtsp
 
 
 ### Transmission
