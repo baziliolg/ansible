@@ -4,12 +4,13 @@ MONTH=$(date +%m)
 DAY=$(date +%d)
 mkdir -p "${YEAR}/${MONTH}/${DAY}"
 /usr/bin/ffmpeg -i rtsp://{{ netcam_user }}:{{ netcam_password }}@{{ netcam_ip }}:554/1 \
-	-loglevel fatal \
-	-vcodec copy \
-	-acodec copy \
-	-map 0 \
-	-f segment \
-	-strftime 1 \
-	-segment_time 300 \
-	-reset_timestamps 1 \
-	-segment_format mp4 "%Y/%m/%d/RECORD_%Y-%m-%d_%H%M%S.mp4"
+    -loglevel fatal \
+    -tag:v hvc1 \
+    -vcodec copy \
+    -acodec copy \
+    -map 0 \
+    -f segment \
+    -strftime 1 \
+    -segment_time 300 \
+    -reset_timestamps 1 \
+    -segment_format mp4 "%Y/%m/%d/RECORD_%Y-%m-%d_%H%M%S.mp4"
