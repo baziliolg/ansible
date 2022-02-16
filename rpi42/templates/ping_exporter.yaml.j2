@@ -1,0 +1,19 @@
+targets:
+  - 10.60.0.100
+  - 10.60.0.254
+  - 10.61.0.100
+  - 91.200.126.129
+  - google.com
+
+dns:
+  refresh: 2m15s
+  nameserver: 10.60.0.11
+
+ping:
+  interval: 2s
+  timeout: 3s
+  history-size: 42
+  payload-size: 120
+
+options:
+  disableIPv6: true

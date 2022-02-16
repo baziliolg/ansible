@@ -247,6 +247,18 @@
       mode: 0644
     register: grafanaconf
 
+    # https://github.com/czerwonk/ping_exporter
+  - name: "Render Ping Exporter config"
+    template:
+      dest: /root/ping_exporter.yaml
+      src: ./templates/ping_exporter.yaml.j2
+      backup: no
+      owner: root
+      group: root
+      mode: 0644
+    register: pingexporterconf
+
+
 ### FTP service setup
 # user upload
   - name: "Create user upload"
