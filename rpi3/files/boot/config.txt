@@ -58,4 +58,5 @@ dtparam=audio=on
 
 [all]
 dtoverlay=pi3-disable-bt
+dtoverlay=pi3-disable-wifi
 gpu_mem=16

@@ -2,6 +2,7 @@
 - hosts: rpi3
   vars:
     packages: true
+    hdd_mountpoint: /files
   remote_user: bazilio
   become: yes
   tasks:
@@ -26,6 +27,7 @@
         - iotop
         - prometheus-node-exporter
         - portmap
+        - netatalk
       state: latest
 
     tags:
@@ -52,7 +54,7 @@
 
 
 ### users
-  - name: "Create user"
+  - name: "Create user bazilio"
     user:
       name: bazilio
       # password created with:
@@ -77,6 +79,7 @@
       - spi
       - i2c
       - gpio
+      - backup
 
   - name: "fix pi password"
     user:
@@ -155,3 +158,51 @@
       masked: no
       state: restarted
     when: prometheus_node_exporter_config.changed
+
+### HDD
+  - name: "Create HDD mount"
+    file: path="{{ hdd_mountpoint }}" state=directory mode=0777 owner=root
+
+  - name: "Mount HDD"
+    mount:
+      path: "{{ hdd_mountpoint }}"
+      src: UUID=1ce84376-d6cf-4242-9e87-a288cdd092ac
+      fstype: ext4
+      state: mounted
+      opts: defaults,noatime
+
+  - name: "Create user backup"
+    user:
+      name: backup
+      password: $6$XshmWkCHPD9Yr/4U$eSgd5xWGfVI9TEVvGtBRq9vL24QGMTNdyfT7mp83sgd0TmYVRMWBipLhppV.es.KK44QRMZ5TJ82BY1v9uRC3.
+      home: "{{ hdd_mountpoint }}/.timemachine"
+      comment: "For Time Machine backups"
+      groups:
+      - backup
+
+  - name: "Create TimeMachine subfolder"
+    file: path="{{ hdd_mountpoint }}/.timemachine" state=directory mode=0770 owner=backup group=backup
+
+  - name: "Create logs subfolder"
+    file: path="{{ hdd_mountpoint }}/.log" state=directory mode=0777 owner=nobody
+
+
+### Time Machine
+  - name: "Render Netatalk config"
+    template:
+      dest: /etc/netatalk/afp.conf
+      src: ./templates/afp.conf.j2
+      backup: yes
+      owner: root
+      group: staff
+      mode: 0644
+    register: afp_conf
+
+  - name: "Restart Netatalk service"
+    systemd:
+      name: netatalk.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: afp_conf.changed
