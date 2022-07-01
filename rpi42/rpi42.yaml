@@ -347,7 +347,7 @@
       name: "Clean old camera recordings"
       minute: "0"
       hour: "1"
-      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +50 -delete -print"
+      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +45 -delete -print"
 
   - name: "Render dump_rtsp systemd service file"
     template:
