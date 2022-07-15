@@ -233,23 +233,23 @@ security = user
 ;   directory mask = 0700
 
 # CUPS printing.
-[printers]
-    comment = All Printers
-    browseable = no
-    path = /var/spool/samba
-    printable = yes
-    guest ok = yes
-    read only = yes
-    create mask = 0700
+;[printers]
+;    comment = All Printers
+;    browseable = no
+;    path = /var/spool/samba
+;    printable = yes
+;    guest ok = yes
+;    read only = yes
+;    create mask = 0700
 
 # Windows clients look for this share name as a source of downloadable
 # printer drivers
-[print$]
-    comment = Printer Drivers
-    path = /var/lib/samba/printers
-    browseable = yes
-    read only = no
-    guest ok = no
+;[print$]
+;    comment = Printer Drivers
+;    path = /var/lib/samba/printers
+;    browseable = yes
+;    read only = no
+;    guest ok = no
 # Uncomment to allow remote administration of Windows print drivers.
 # You may need to replace 'lpadmin' with the name of the group your
 # admin users are members of.
@@ -257,9 +257,9 @@ security = user
 # to the drivers directory for these users to have write rights in it
 ;   write list = root, @lpadmin
 
-;[files]
-;    path = /files
-;    comment = 'Files'
-;    browseable = yes
-;    read only = no
-;    guest ok = yes
+[files]
+  path = {{ hdd_mountpoint }}
+  comment = 'Files'
+  browseable = yes
+  read only = no
+  guest ok = yes
