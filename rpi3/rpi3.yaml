@@ -27,6 +27,8 @@
         - iotop
         - prometheus-node-exporter
         - portmap
+        - transmission-daemon
+        - transmission-cli
         - netatalk
       state: latest
 
@@ -206,3 +208,92 @@
       masked: no
       state: restarted
     when: afp_conf.changed
+
+### Resilio Sync
+  - name: "Add Resilio Sync apt key"
+    apt_key:
+      url: https://linux-packages.resilio.com/resilio-sync/key.asc
+      state: present
+    tags:
+      - resilio-sync
+
+  - name: "Add Resilio Sync apt repository"
+    apt_repository:
+      repo: deb [arch=armhf] http://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free
+      update_cache: yes
+    tags:
+      - resilio-sync
+
+  - name: "Install Resilio Sync package"
+    apt:
+      name: resilio-sync
+      state: latest
+    tags:
+      - resilio-sync
+
+  - name: "Create Resilio Sync config folder"
+    file: path="{{ hdd_mountpoint }}/.configs/.sync" state=directory mode=0755 owner=root
+
+  - name: "Render Resilio Sync systemd service file"
+    template:
+      dest: /lib/systemd/system/resilio-sync.service
+      src: ./templates/resilio-sync.service.j2
+      owner: root
+      group: root
+      mode: 0644
+    register: rslconfig
+    tags:
+      - resilio-sync
+
+  - name: "Restart Resilio Sync service"
+    systemd:
+      name: resilio-sync.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: rslconfig.changed
+    tags:
+      - resilio-sync
+
+### Transmission
+  - name: "Set sysctl config for Transmission"
+    template:
+      dest: /etc/sysctl.d/20-transmission.conf
+      src: ./templates/20-transmission.conf.j2
+      owner: root
+      group: root
+    register: transmission_sysctl
+    tags:
+      - transmission
+
+  - name: "Apply sysctl config for Transmission"
+    command: "/sbin/sysctl -p"
+    when: transmission_sysctl.changed
+    become: true
+    become_user: root
+    tags:
+      - transmission
+
+  - name: "Render Transmission config"
+    template:
+      dest: /etc/transmission-daemon/settings.json
+      src: ./templates/transmission.settings.json.j2
+      backup: yes
+      owner: debian-transmission
+      group: debian-transmission
+      mode: 0600
+    register: transmission_conf
+    tags:
+      - transmission
+
+  - name: "Restart Transmission service"
+    systemd:
+      name: transmission-daemon.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: transmission_conf.changed or transmission_sysctl.changed
+    tags:
+      - transmission
