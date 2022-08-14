@@ -8,6 +8,8 @@
     files_blkid: "e1814c17-048a-4d29-8515-a60b76f992bf"
     camera_blkid: "38e39da5-152c-4650-9f1e-d1f95af00f25"
     netcam_ip: "10.60.0.17"
+    s3_camera_sync_bucket: "camera-storage"
+    s3_camera_sync_logfile: "/var/log/s3_camera_sync.log"
   remote_user: pi
   become: yes
   tasks:
@@ -31,6 +33,7 @@
       name:
         - aptitude
         - avahi-daemon
+        - awscli
         - docker-compose
         - docker.io
         - ethtool
@@ -40,6 +43,7 @@
         - htop
         - iotop
         - locales
+        - logrotate
         - mc
         - motion
         - netatalk
@@ -59,6 +63,7 @@
         - transmission-cli
         - sudo
         - usbutils
+        - util-linux
         - vim
         - wget
       state: latest
@@ -334,6 +339,31 @@
       masked: no
       state: restarted
     when: motionconf.changed
+
+  - name: "Render S3 camera upload script"
+    template:
+      dest: /usr/local/sbin/sync_camera_to_s3.sh
+      src: ./templates/sync_camera_to_s3.sh.j2
+      backup: no
+      owner: root
+      group: root
+      mode: 0750
+
+  - name: "Render S3 camera logrotate config"
+    template:
+      dest: /etc/logrotate.d/s3_camera_sync
+      src: ./templates/s3_camera_sync.logrotate.j2
+      backup: no
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Upload camera videos to S3 cron
+    ansible.builtin.cron:
+      name: "Upload camera videos to S3 cron"
+      minute: "15"
+      hour: "*/6"
+      job: "/usr/bin/flock --timeout 10 /tmp/s3_upload.lock -c \"/usr/local/sbin/sync_camera_to_s3.sh\""
 
   - name: Empty motion files cron
     ansible.builtin.cron:

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+find {{ camera_mountpoint }} -maxdepth 1 -type d -iname '20??' \
+    -exec bash -lc 'aws s3 sync --no-progress --storage-class GLACIER {} s3://{{ s3_camera_sync_bucket }}/$(basename "{}")' \; >> {{ s3_camera_sync_logfile }}
