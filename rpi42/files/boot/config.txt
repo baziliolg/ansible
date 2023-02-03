@@ -3,7 +3,7 @@
 # Some settings may impact device functionality. See link above for details
 
 max_usb_current=1
-
+safe_mode_gpio=4
 gpu_mem=64
 
 # uncomment if you get no picture on HDMI for a default "safe" mode

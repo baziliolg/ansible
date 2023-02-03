@@ -1,18 +1,16 @@
 targets:
   - 10.60.0.254
-  - 10.61.0.100
-  - 10.61.0.254
   - 10.14.88.100
   - 10.14.88.254
   - 91.200.126.129
-  - google.com
+  - 1.1.1.1
 
 dns:
   refresh: 2m15s
-  nameserver: 10.60.0.11
+  nameserver: 10.60.0.254
 
 ping:
-  interval: 2s
+  interval: 5s
   timeout: 3s
   history-size: 42
   payload-size: 120

@@ -5,7 +5,7 @@
     packages: false
     camera_mountpoint: /camera
     files_mountpoint: /files
-    files_blkid: "e1814c17-048a-4d29-8515-a60b76f992bf"
+    files_blkid: "f3aa8b9e-8549-4d28-b75d-600cb206c499"
     camera_blkid: "38e39da5-152c-4650-9f1e-d1f95af00f25"
     netcam_ip: "10.60.0.17"
     s3_camera_sync_bucket: "camera-storage"
