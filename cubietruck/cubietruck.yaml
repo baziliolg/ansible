@@ -80,6 +80,13 @@
 
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
+# Sysctl
+  - sysctl:
+      name: fs.inotify.max_user_watches
+      value: 1048576
+      state: present
+      sysctl_set: yes
+      reload: yes
 
 ### mounts
   - name: "Create torrent mount"
