@@ -28,3 +28,6 @@ Temporary Items
 
 # Ansible stuff
 *.retry
+
+# VSCode
+.vscode
