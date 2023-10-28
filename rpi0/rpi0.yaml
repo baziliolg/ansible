@@ -1,0 +1,141 @@
+---
+- hosts: rpi0
+  vars:
+    remove_packages: true
+    packages: true
+  remote_user: bazilio
+  become: yes
+  tasks:
+
+### Delete packages from X11 installation of Raspbian
+  - name: "delete packages"
+    apt:
+      update_cache: no
+      name:
+        - xserver-xorg
+        - lxde
+        - plymouth
+      state: absent
+      autoremove: yes
+      purge: yes
+    when: remove_packages
+
+  - name: "install packages"
+    apt:
+      update_cache: yes
+      name:
+        - aptitude
+        - avahi-daemon
+        - ethtool
+        - fake-hwclock
+        - git
+        - htop
+        - iotop
+        - locales
+        - logrotate
+        - mc
+        - ntp
+        - ntpdate
+        - prometheus-node-exporter
+        - rename
+        - rfkill
+        - rsync
+        - screen
+        - sudo
+        - util-linux
+        - vim
+        - wget
+      state: latest
+    when: packages
+    tags:
+      - packages
+
+
+### s alias
+  - name: "Add aliases to /etc/profile"
+    blockinfile:
+      path: /etc/profile
+      insertafter: EOF
+      block: |
+        alias s='sudo su -'
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      backup: yes
+
+### sudoers
+  - name: "sudoers NOPASSWD"
+    lineinfile:
+      path: /etc/sudoers
+      state: present
+      regexp: '^%sudo\s'
+      line: '%sudo ALL=(ALL)  NOPASSWD: ALL'
+
+### users
+  - name: "Create user"
+    user:
+      name: bazilio
+      # password created with:
+      # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+      password: $1$Ub9VzL9S$9TF/6iNcJp4j5VixhZksK0
+      home: "/home/bazilio"
+      comment: "Hello there"
+      shell: "/bin/bash"
+      groups:
+      - sudo
+      - adm
+      - dialout
+      - cdrom
+      - audio
+      - video
+      - plugdev
+      - games
+      - users
+      - input
+      - netdev
+      - nogroup
+
+  - name: "Create bazilio user .ssh folder"
+    file:
+      path: "/home/bazilio/.ssh"
+      state: directory
+      owner: bazilio
+      group: bazilio
+      mode: 0700
+
+
+  - name: "Create bazilio user authorized_keys file"
+    copy:
+      dest: "/home/bazilio/.ssh/authorized_keys"
+      src: ./files/authorized_keys.bazilio_user
+      owner: bazilio
+      group: bazilio
+      mode: 0600
+
+
+### boot config
+  - name: Place config.txt
+    copy:
+      dest: "/boot/config.txt"
+      src: ./files/boot/config.txt
+      owner: root
+      group: root
+      mode: 0755
+
+
+### prometheus-node-exporter
+  - name: "prometheus-node-exporter default settings"
+    copy:
+      dest: "/etc/default/prometheus-node-exporter"
+      src: ./files/prometheus-node-exporter
+      owner: root
+      group: root
+      mode: 0644
+    register: prometheus_node_exporter_config
+
+  - name: "Restart prometheus-node-exporter service"
+    systemd:
+      name: prometheus-node-exporter.service
+      daemon_reload: yes
+      enabled: yes
+      masked: no
+      state: restarted
+    when: prometheus_node_exporter_config.changed
