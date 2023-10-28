@@ -78,7 +78,7 @@
       path: /etc/profile
       insertafter: EOF
       block: |
-        alias s='sudo su -'
+        alias s='sudo su -' df='df -x overlay -x tmpfs'
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
       backup: yes
 
@@ -377,7 +377,7 @@
       name: "Clean old camera recordings"
       minute: "0"
       hour: "1"
-      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +40 -delete -print"
+      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +100 -delete -print"
 
   - name: "Render dump_rtsp systemd service file"
     template:
