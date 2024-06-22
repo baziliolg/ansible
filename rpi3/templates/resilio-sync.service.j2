@@ -1,17 +1,29 @@
 [Unit]
 Description=Resilio Sync service
-Documentation=https://help.getsync.com/
+Documentation=https://help.resilio.com
 After=network.target network-online.target
 
 [Service]
 Type=forking
-User=root
-Group=root
 UMask=0002
 Restart=on-failure
 PermissionsStartOnly=true
-PIDFile={{ hdd_mountpoint }}/.configs/.sync/sync.pid
-ExecStart=/usr/bin/rslsync --webui.listen 0.0.0.0:8888 --storage {{ hdd_mountpoint }}/.configs/.sync
+
+User=root
+Group=root
+Environment="SYNC_USER=root"
+Environment="SYNC_GROUP=root"
+
+Environment="SYNC_RUN_DIR=/var/run/resilio-sync"
+Environment="SYNC_LIB_DIR={{ hdd_mountpoint }}/.configs/.sync"
+Environment="SYNC_CONF_DIR=/etc/resilio-sync"
+
+PIDFile=/var/run/resilio-sync/sync.pid
+
+ExecStartPre=/bin/mkdir -p ${SYNC_RUN_DIR} ${SYNC_LIB_DIR}
+ExecStartPre=/bin/chown -R ${SYNC_USER}:${SYNC_GROUP} ${SYNC_RUN_DIR} ${SYNC_LIB_DIR}
+ExecStart=/usr/bin/rslsync --config ${SYNC_CONF_DIR}/config.json
+ExecStartPost=/bin/sleep 1
 
 [Install]
 WantedBy=multi-user.target

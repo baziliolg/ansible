@@ -9,7 +9,7 @@
 
   - name: "install packages"
     apt:
-      update_cache: no
+      update_cache: yes
       name:
         - mc
         - vim
@@ -234,6 +234,17 @@
   - name: "Create Resilio Sync config folder"
     file: path="{{ hdd_mountpoint }}/.configs/.sync" state=directory mode=0755 owner=root
 
+  - name: "Render Resilio Sync config json"
+    template:
+      dest: /etc/resilio-sync/config.json
+      src: ./templates/resilio-sync.config.j2
+      owner: root
+      group: root
+      mode: 0644
+    register: rslconfig
+    tags:
+      - resilio-sync
+
   - name: "Render Resilio Sync systemd service file"
     template:
       dest: /lib/systemd/system/resilio-sync.service
@@ -297,3 +308,12 @@
     when: transmission_conf.changed or transmission_sysctl.changed
     tags:
       - transmission
+
+### vimrc
+  - name: "vimrc"
+    copy:
+      dest: "/root/.vimrc"
+      src: ../vimrc
+      owner: root
+      group: root
+      mode: 0644
