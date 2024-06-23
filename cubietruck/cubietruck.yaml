@@ -11,8 +11,9 @@
 
   - name: "install packages"
     apt:
-      update_cache: no
+      update_cache: yes
       name:
+        - apcupsd
         - mc
         - screen
         - htop
@@ -166,6 +167,20 @@
     tags:
       - resilio-sync
 
+  - name: "Create Resilio Sync config folder"
+    file: path="{{ hdd_mountpoint }}/.configs/.sync" state=directory mode=0755 owner=root
+
+  - name: "Render Resilio Sync config json"
+    template:
+      dest: /etc/resilio-sync/config.json
+      src: ./templates/resilio-sync.config.j2
+      owner: root
+      group: root
+      mode: 0644
+    register: rslconfig
+    tags:
+      - resilio-sync
+
   - name: "Render Resilio Sync systemd service file"
     template:
       dest: /lib/systemd/system/resilio-sync.service
@@ -189,16 +204,16 @@
       - resilio-sync
 
 ### Samba
-  - name: "Create cartoons folder"
-    file:
-      path: "{{ hdd_mountpoint }}/cartoons"
-      state: directory
-      recurse: no
-      owner: nobody
-      group: nogroup
-      mode: 0777
-    tags:
-      - samba
+#  - name: "Create cartoons folder"
+#    file:
+#      path: "{{ hdd_mountpoint }}/cartoons"
+#      state: directory
+#      recurse: no
+#      owner: nobody
+#      group: nogroup
+#      mode: 0777
+#    tags:
+#      - samba
 
   - name: "Render SMB config"
     template:
@@ -414,6 +429,49 @@
       masked: no
       state: restarted
     when: prometheus_node_exporter_config.changed
+
+### vimrc
+  - name: "vimrc"
+    copy:
+      dest: "/root/.vimrc"
+      src: ../vimrc
+      owner: root
+      group: root
+      mode: 0644
+
+### apcupsd /etc/default configuration
+  - name: "/etc/default/apcupsd"
+    blockinfile:
+      path: /etc/default/apcupsd
+      create: true
+      owner: root
+      group: root
+      mode: 0644
+      insertafter: BOF
+      block: |
+        # Defaults for apcupsd initscript (unused with systemd as init).
+        # Set to "yes" to enable startup of apcupsd.
+        ISCONFIGURED=yes
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      backup: no
+
+  - name: "apcupsd.conf"
+    copy:
+      dest: "/etc/apcupsd/apcupsd.conf"
+      src: ./files/apcupsd.conf
+      owner: root
+      group: root
+      mode: 0644
+    register: apcupsd_config
+
+  - name: "Restart apcupsd"
+    systemd:
+      name: apcupsd.service
+      daemon_reload: no
+      enabled: yes
+      masked: no
+      state: restarted
+    when: apcupsd_config.changed
 
   handlers:
     - name: restart ntp
