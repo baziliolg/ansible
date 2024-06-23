@@ -36,25 +36,13 @@ scrape_configs:
     static_configs:
     - targets: ['10.60.0.101:9100']
 
-  - job_name: 'RPi0'
+  - job_name: 'RTL-SDR'
     static_configs:
-    - targets: ['10.60.0.111:9100']
+    - targets: ['10.60.0.114:9100']
 
   - job_name: 'Cubietruck'
     static_configs:
-    - targets: ['10.60.0.11:9100', '10.60.0.11:9162']
-
-#  - job_name: 'Mikrotik'
-#    static_configs:
-#    - targets: ['10.60.0.100:9436']
-
-  - job_name: 'ESP8266'
-    static_configs:
-    - targets: ['10.60.0.26:80']
-
-#  - job_name: 'core2duo'
-#    static_configs:
-#    - targets: ['10.60.0.7:9100']
+    - targets: ['10.60.0.11:9100']
 
   - job_name: 'ping_exporter'
     static_configs:

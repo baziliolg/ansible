@@ -2,7 +2,7 @@
 - hosts: rpi42
   vars:
     remove_packages: false
-    packages: false
+    packages: true
     camera_mountpoint: /camera
     files_mountpoint: /files
     files_blkid: "f3aa8b9e-8549-4d28-b75d-600cb206c499"
@@ -32,6 +32,7 @@
       update_cache: yes
       name:
         - aptitude
+        - apcupsd
         - avahi-daemon
         - awscli
         - docker-compose
@@ -377,7 +378,7 @@
       name: "Clean old camera recordings"
       minute: "0"
       hour: "1"
-      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +100 -delete -print"
+      job: "find {{ camera_mountpoint }} -mindepth 2 -type f \\( -name '*.mp4' -o -name '*.mkv' \\) ! -ipath '*timelapse/*' -mtime +80 -delete -print"
 
   - name: "Render dump_rtsp systemd service file"
     template:
@@ -455,3 +456,46 @@
     when: transmission_conf.changed or transmission_sysctl.changed
     tags:
       - transmission
+
+### vimrc
+  - name: "vimrc"
+    copy:
+      dest: "/root/.vimrc"
+      src: ../vimrc
+      owner: root
+      group: root
+      mode: 0644
+
+### apcupsd /etc/default configuration
+  - name: "/etc/default/apcupsd"
+    blockinfile:
+      path: /etc/default/apcupsd
+      create: true
+      owner: root
+      group: root
+      mode: 0644
+      insertafter: BOF
+      block: |
+        # Defaults for apcupsd initscript (unused with systemd as init).
+        # Set to "yes" to enable startup of apcupsd.
+        ISCONFIGURED=yes
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      backup: no
+
+  - name: "apcupsd.conf"
+    copy:
+      dest: "/etc/apcupsd/apcupsd.conf"
+      src: ./files/apcupsd.conf
+      owner: root
+      group: root
+      mode: 0644
+    register: apcupsd_config
+
+  - name: "Restart apcupsd"
+    systemd:
+      name: apcupsd.service
+      daemon_reload: no
+      enabled: yes
+      masked: no
+      state: restarted
+    when: apcupsd_config.changed
