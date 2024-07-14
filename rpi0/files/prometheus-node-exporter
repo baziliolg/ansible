@@ -12,6 +12,8 @@ ARGS="--collector.filesystem.ignored-mount-points=\"^/(dev|proc|run|sys|media|va
     --no-collector.ipvs \
     --no-collector.wifi \
     --no-collector.vmstat \
+    --no-collector.pressure \
+    --no-collector.rapl \
     --no-collector.sockstat"
 
 

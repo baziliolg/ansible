@@ -1,8 +1,8 @@
 ---
 - hosts: rpi0
   vars:
-    remove_packages: true
-    packages: true
+    remove_packages: false
+    packages: false
   remote_user: bazilio
   become: yes
   tasks:
@@ -139,3 +139,12 @@
       masked: no
       state: restarted
     when: prometheus_node_exporter_config.changed
+
+### vimrc
+  - name: "vimrc"
+    copy:
+      dest: "/root/.vimrc"
+      src: ../vimrc
+      owner: root
+      group: root
+      mode: 0644
