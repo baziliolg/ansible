@@ -2,7 +2,7 @@
 - hosts: rpi42
   vars:
     remove_packages: false
-    packages: true
+    packages: false
     camera_mountpoint: /camera
     files_mountpoint: /files
     files_blkid: "f3aa8b9e-8549-4d28-b75d-600cb206c499"
