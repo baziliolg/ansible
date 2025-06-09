@@ -31,3 +31,4 @@ Temporary Items
 
 # VSCode
 .vscode
+*.code-workspace
