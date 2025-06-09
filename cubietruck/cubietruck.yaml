@@ -21,7 +21,7 @@
         - console-log
         - smartmontools
         - ntpdate
-        - tmux 
+        - tmux
         - git
         - samba
         - transmission-daemon
@@ -64,7 +64,7 @@
       insertbefore: "exit\ 0"
       block: |
         # set led triggers
-        echo ide-disk > /sys/class/leds/cubietruck\:green\:usr/trigger
+        echo disk-activity > /sys/class/leds/cubietruck\:green\:usr/trigger
         echo cpu1 > /sys/class/leds/cubietruck\:orange\:usr/trigger
         echo cpu0 > /sys/class/leds/cubietruck\:white\:usr/trigger
         echo mmc0 > /sys/class/leds/cubietruck\:blue\:usr/trigger
