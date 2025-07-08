@@ -1,5 +1,5 @@
 ---
-- hosts: osmc
+- hosts: sdr
   vars:
     remove_packages: false
     packages: true
@@ -35,6 +35,7 @@
         - prometheus-node-exporter
         - rename
         - rfkill
+        - rtl-sdr
         - screen
         - sudo
         - usbutils
@@ -107,11 +108,11 @@
       mode: 0600
 
 
-### boot config
-#  - name: Place config.txt
+### boot user-config
+#  - name: Place config-user.txt
 #    copy:
-#      dest: "/boot/config.txt"
-#      src: ./files/boot/config.txt
+#      dest: "/boot/config-user.txt"
+#      src: ./files/boot/config-user.txt
 #      owner: root
 #      group: root
 #      mode: 0755
