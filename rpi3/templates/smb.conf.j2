@@ -24,8 +24,11 @@
 [global]
 
 ## Browsing/Identification ###
-netbios name = RPi3
-
+   netbios name = RPi3
+   server min protocol = SMB2
+   server max protocol = SMB3
+   client min protocol = SMB2
+   client max protocol = SMB3
 # Change this to the workgroup/NT-domain name your Samba server will part of
    workgroup = WORKGROUP
 
@@ -44,7 +47,13 @@ netbios name = RPi3
    printing = bsd
    printcap name = /dev/null
    disable spoolss = yes
-
+   vfs objects = catia fruit streams_xattr
+   spotlight = no
+   fruit:metadata = stream
+   fruit:resource = stream
+   fruit:locking = none
+   fruit:encoding = native
+   ea support = yes
 #### Networking ####
 
 # The specific set of interfaces / networks to bind to
@@ -263,3 +272,14 @@ security = user
   browseable = yes
   read only = no
   guest ok = yes
+
+[TimeMachineRPi3]
+    vfs objects = catia fruit streams_xattr
+    fruit:time machine = yes
+    fruit:time machine max size = 800G
+    path = {{ hdd_mountpoint }}/.timemachine
+    comment = TimeMachineRPi3
+    read only = no
+    available = yes
+    writable = yes
+    valid users = backup

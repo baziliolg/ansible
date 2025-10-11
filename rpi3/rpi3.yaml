@@ -14,22 +14,19 @@
         - mc
         - vim
         - screen
-        - cups
-        - hplip
-        - sane
-        - ntpdate
         - tmux 
         - git
         - samba
+        - samba-vfs-modules
         - smartmontools
-        - ntpdate
         - htop
         - iotop
         - prometheus-node-exporter
-        - portmap
         - transmission-daemon
         - transmission-cli
         - netatalk
+        - aptitude
+        - python3-debian
       state: latest
 
     tags:
@@ -67,8 +64,6 @@
       groups:
       - sudo
       - adm
-      - lpadmin
-      - scanner
       - dialout
       - cdrom
       - audio
@@ -99,7 +94,6 @@
       group: bazilio
       mode: 0700
 
-
   - name: "Create bazilio user authorized_keys file"
     copy:
       dest: "/home/bazilio/.ssh/authorized_keys"
@@ -108,11 +102,10 @@
       group: bazilio
       mode: 0600
 
-
 ### boot config
-  - name: Place /boot/config.txt
+  - name: Place /boot/firmware/config.txt
     copy:
-      dest: "/boot/config.txt"
+      dest: "/boot/firmware/config.txt"
       src: ./files/boot/config.txt
       owner: root
       group: root
@@ -189,7 +182,7 @@
     file: path="{{ hdd_mountpoint }}/.log" state=directory mode=0777 owner=nobody
 
 
-### Time Machine
+### Netatalk (for older Macs)
   - name: "Render Netatalk config"
     template:
       dest: /etc/netatalk/afp.conf
@@ -210,22 +203,25 @@
     when: afp_conf.changed
 
 ### Resilio Sync
-  - name: "Add Resilio Sync apt key"
-    apt_key:
-      url: https://linux-packages.resilio.com/resilio-sync/key.asc
-      state: present
-    tags:
-      - resilio-sync
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/deb822_repository_module.html
+# curl -fsSL https://linux-packages.resilio.com/resilio-sync/key.asc | sudo gpg --dearmor -o /usr/share/keyrings/resilio-keyring.gpg
+# https://www.resilio.com/blog/official-linux-packages-for-sync-now-available
 
   - name: "Add Resilio Sync apt repository"
-    apt_repository:
-      repo: deb [arch=armhf] http://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free
-      update_cache: yes
+    deb822_repository:
+      name: resilio-sync
+      types: deb
+      uris: http://linux-packages.resilio.com/resilio-sync/deb
+      suites: resilio-sync
+      components: non-free
+      architectures: arm64
+      signed_by: https://linux-packages.resilio.com/resilio-sync/key.asc
     tags:
       - resilio-sync
 
   - name: "Install Resilio Sync package"
     apt:
+      update_cache: yes
       name: resilio-sync
       state: latest
     tags:
@@ -241,6 +237,16 @@
       owner: root
       group: root
       mode: 0644
+    register: rslconfig
+    tags:
+      - resilio-sync
+
+# https://platform.resilio.com/hc/en-us/articles/360011329820-Agent-run-out-of-system-notify-watchers
+  - name: "Set Resilio Sync sysctl"
+    ansible.posix.sysctl:
+      name: fs.inotify.max_user_watches
+      value: '65536'
+      state: present
     register: rslconfig
     tags:
       - resilio-sync
@@ -279,7 +285,7 @@
       - transmission
 
   - name: "Apply sysctl config for Transmission"
-    command: "/sbin/sysctl -p"
+    command: "/sbin/sysctl --system"
     when: transmission_sysctl.changed
     become: true
     become_user: root
