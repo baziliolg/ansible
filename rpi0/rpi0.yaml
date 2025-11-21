@@ -148,3 +148,55 @@
       owner: root
       group: root
       mode: 0644
+
+### (config for Docker container)
+  - name: "Render Prometheus config"
+    template:
+      dest: /root/prometheus.yml
+      src: ./templates/prometheus.yml.j2
+      backup: yes
+      owner: root
+      group: root
+      mode: 0644
+    register: prometheusconf
+    # TODO: describe prometheus server Docker container
+
+    # https://github.com/czerwonk/ping_exporter
+    # except this particular image has been built locally with arm32 golang
+  - name: "Render Ping Exporter config"
+    template:
+      dest: /root/ping_exporter.yaml
+      src: ./templates/ping_exporter.yaml.j2
+      backup: no
+      owner: root
+      group: root
+      mode: 0644
+    tags: ping-exporter
+    register: pingexporterconf
+
+  - name: Run Ping Exporter container
+    docker_container:
+      name: ping_exporter
+      image: czerwonk/ping_exporter
+      state: started
+      restart_policy: always
+      volumes:
+        - /root/ping_exporter.yaml:/config/config.yml:ro
+      published_ports:
+        - "9427:9427"
+    tags:
+      - ping-exporter
+
+  - name: Recreate Ping Exporter container if config changed
+    docker_container:
+      name: ping_exporter
+      image: czerwonk/ping_exporter
+      recreate: yes
+      state: started
+      restart_policy: always
+      volumes:
+        - /root/ping_exporter.yaml:/config/config.yml:ro
+      published_ports:
+        - "9427:9427"
+    when: pingexporterconf.changed
+    tags: ping_exporter
